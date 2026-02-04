@@ -80,7 +80,9 @@ export type Database = {
       frequencias_geradas: {
         Row: {
           ano: number
+          assinada_em: string | null
           created_at: string
+          folha_assinada_url: string | null
           gerado_em: string
           id: string
           lotacao_id: string | null
@@ -90,7 +92,9 @@ export type Database = {
         }
         Insert: {
           ano: number
+          assinada_em?: string | null
           created_at?: string
+          folha_assinada_url?: string | null
           gerado_em?: string
           id?: string
           lotacao_id?: string | null
@@ -100,7 +104,9 @@ export type Database = {
         }
         Update: {
           ano?: number
+          assinada_em?: string | null
           created_at?: string
+          folha_assinada_url?: string | null
           gerado_em?: string
           id?: string
           lotacao_id?: string | null
@@ -178,6 +184,33 @@ export type Database = {
           nome?: string
           sigla?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          nome_completo: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_completo?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          nome_completo?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

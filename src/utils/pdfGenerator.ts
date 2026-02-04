@@ -18,13 +18,13 @@ function isWeekend(day: number, month: number, year: number): boolean {
   return dayOfWeek === 0 || dayOfWeek === 6;
 }
 
-export async function generateFrequenciaPDF(
+function createFrequenciaPDFDocument(
   colaboradores: Colaborador[],
   mes: number,
   ano: number,
   mesLabel: string,
   orgaoNome: string
-): Promise<void> {
+): jsPDF {
   const doc = new jsPDF({
     orientation: "portrait",
     unit: "mm",
@@ -40,7 +40,6 @@ export async function generateFrequenciaPDF(
 
     const pageWidth = doc.internal.pageSize.getWidth();
     const margin = 15;
-    const contentWidth = pageWidth - margin * 2;
 
     // Header
     doc.setFontSize(12);
@@ -163,7 +162,33 @@ export async function generateFrequenciaPDF(
     doc.text(`Data: ____/____/________`, pageWidth / 2, signatureY + 15, { align: "center" });
   });
 
+  return doc;
+}
+
+export async function generateFrequenciaPDF(
+  colaboradores: Colaborador[],
+  mes: number,
+  ano: number,
+  mesLabel: string,
+  orgaoNome: string
+): Promise<void> {
+  const doc = createFrequenciaPDFDocument(colaboradores, mes, ano, mesLabel, orgaoNome);
+  
   // Download do PDF
   const fileName = `frequencia_${mesLabel.toLowerCase()}_${ano}.pdf`;
+  doc.save(fileName);
+}
+
+export async function regenerateFrequenciaPDF(
+  colaboradores: Colaborador[],
+  mes: number,
+  ano: number,
+  mesLabel: string,
+  orgaoNome: string
+): Promise<void> {
+  const doc = createFrequenciaPDFDocument(colaboradores, mes, ano, mesLabel, orgaoNome);
+  
+  // Download do PDF
+  const fileName = `frequencia_${mesLabel.toLowerCase()}_${ano}_redownload.pdf`;
   doc.save(fileName);
 }

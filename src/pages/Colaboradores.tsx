@@ -50,6 +50,7 @@ import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
 import { Colaborador, ColaboradorForm } from "@/types/database";
 import { Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react";
+import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
 
 const initialFormData: ColaboradorForm = {
   nome_completo: "",
@@ -76,6 +77,18 @@ const ColaboradoresPage = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingColaborador, setEditingColaborador] = useState<Colaborador | null>(null);
   const [formData, setFormData] = useState<ColaboradorForm>(initialFormData);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  // Filter colaboradores based on search term
+  const filteredColaboradores = colaboradores.filter((colaborador) => {
+    if (!searchTerm) return true;
+    const search = searchTerm.toLowerCase();
+    return (
+      colaborador.nome_completo.toLowerCase().includes(search) ||
+      colaborador.matricula.toLowerCase().includes(search) ||
+      colaborador.cargo.toLowerCase().includes(search)
+    );
+  });
 
   const resetForm = () => {
     setFormData(initialFormData);
@@ -365,20 +378,37 @@ const ColaboradoresPage = () => {
             </p>
           </div>
         ) : (
-          <div className="card-institutional overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Matrícula</TableHead>
-                  <TableHead className="hidden md:table-cell">Cargo</TableHead>
-                  <TableHead className="hidden lg:table-cell">Órgão</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {colaboradores.map((colaborador) => (
+          <div className="space-y-4">
+            <ColaboradoresFilters 
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+            />
+            
+            {filteredColaboradores.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <Users className="h-12 w-12 text-muted-foreground/50" />
+                <h3 className="mt-4 text-lg font-semibold text-foreground">
+                  Nenhum resultado encontrado
+                </h3>
+                <p className="text-muted-foreground mt-1">
+                  Tente ajustar os filtros de busca
+                </p>
+              </div>
+            ) : (
+              <div className="card-institutional overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Nome</TableHead>
+                      <TableHead>Matrícula</TableHead>
+                      <TableHead className="hidden md:table-cell">Cargo</TableHead>
+                      <TableHead className="hidden lg:table-cell">Órgão</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Ações</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredColaboradores.map((colaborador) => (
                   <TableRow key={colaborador.id}>
                     <TableCell className="font-medium">
                       {colaborador.nome_completo}
@@ -442,9 +472,11 @@ const ColaboradoresPage = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         )}
       </div>

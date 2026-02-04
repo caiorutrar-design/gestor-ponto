@@ -42,6 +42,8 @@ export interface FrequenciaGerada {
   quantidade_colaboradores: number;
   gerado_em: string;
   created_at: string;
+  folha_assinada_url: string | null;
+  assinada_em: string | null;
   orgao?: Orgao;
   lotacao?: Lotacao;
 }
