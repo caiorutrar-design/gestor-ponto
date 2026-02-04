@@ -1,4 +1,4 @@
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard,
@@ -8,9 +8,11 @@ import {
   FileText,
   Menu,
   X,
+  LogOut,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 
 const navigation = [
   { name: "Início", href: "/", icon: LayoutDashboard },
@@ -26,7 +28,14 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/login");
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -81,7 +90,22 @@ export function AppLayout({ children }: AppLayoutProps) {
           })}
         </nav>
 
-        <div className="absolute bottom-4 left-0 right-0 px-4">
+        <div className="absolute bottom-4 left-0 right-0 px-4 space-y-3">
+          {user && (
+            <div className="rounded-lg bg-sidebar-accent/30 px-4 py-3">
+              <p className="text-xs text-sidebar-foreground/70 truncate">
+                {user.email}
+              </p>
+            </div>
+          )}
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+            onClick={handleSignOut}
+          >
+            <LogOut className="h-4 w-4" />
+            Sair
+          </Button>
           <div className="rounded-lg bg-sidebar-accent/30 px-4 py-3">
             <p className="text-xs text-sidebar-foreground/70">
               Sistema de Gestão de Frequência

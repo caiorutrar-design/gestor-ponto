@@ -46,3 +46,32 @@ export function useCreateFrequencia() {
     },
   });
 }
+
+export function useUpdateFrequencia() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (data: {
+      id: string;
+      folha_assinada_url?: string;
+      assinada_em?: string;
+    }) => {
+      const { id, ...updateData } = data;
+      const { data: result, error } = await supabase
+        .from("frequencias_geradas")
+        .update(updateData)
+        .eq("id", id)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      return result;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["frequencias"] });
+    },
+    onError: (error: Error) => {
+      toast.error(`Erro ao atualizar frequência: ${error.message}`);
+    },
+  });
+}
