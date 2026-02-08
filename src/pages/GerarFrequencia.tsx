@@ -19,6 +19,7 @@ import { generateFrequenciaPDF } from "@/utils/pdfGenerator";
 import { Colaborador } from "@/types/database";
 import { FileText, Loader2, Calendar, Users, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { logError } from "@/lib/logger";
 
 const meses = [
   { value: 1, label: "Janeiro" },
@@ -106,7 +107,7 @@ const GerarFrequenciaPage = () => {
 
       toast.success(`PDF gerado com sucesso! ${colaboradoresParaGerar.length} folha(s) de frequência.`);
     } catch (error) {
-      console.error("Erro ao gerar PDF:", error);
+      logError("GerarFrequencia", error);
       toast.error("Erro ao gerar PDF. Tente novamente.");
     } finally {
       setIsGenerating(false);
