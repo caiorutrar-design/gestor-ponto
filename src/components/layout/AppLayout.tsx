@@ -9,17 +9,27 @@ import {
   Menu,
   X,
   LogOut,
+  Shield,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsAdmin } from "@/hooks/useUserRole";
+import { Badge } from "@/components/ui/badge";
 
-const navigation = [
+interface NavItem {
+  name: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  adminOnly?: boolean;
+}
+
+const navigation: NavItem[] = [
   { name: "Início", href: "/", icon: LayoutDashboard },
-  { name: "Colaboradores", href: "/colaboradores", icon: Users },
-  { name: "Órgãos", href: "/orgaos", icon: Building2 },
-  { name: "Lotações", href: "/lotacoes", icon: MapPin },
-  { name: "Frequências Geradas", href: "/frequencias", icon: FileText },
+  { name: "Colaboradores", href: "/colaboradores", icon: Users, adminOnly: true },
+  { name: "Órgãos", href: "/orgaos", icon: Building2, adminOnly: true },
+  { name: "Lotações", href: "/lotacoes", icon: MapPin, adminOnly: true },
+  { name: "Frequências Geradas", href: "/frequencias", icon: FileText, adminOnly: true },
 ];
 
 interface AppLayoutProps {
@@ -30,7 +40,13 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
+  const { isAdmin } = useIsAdmin();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  
+  // Filter navigation items based on user role
+  const visibleNavigation = navigation.filter(
+    (item) => !item.adminOnly || isAdmin
+  );
 
   const handleSignOut = async () => {
     await signOut();
@@ -69,7 +85,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <nav className="mt-6 px-3 space-y-1">
-          {navigation.map((item) => {
+          {visibleNavigation.map((item) => {
             const isActive = location.pathname === item.href;
             return (
               <Link
@@ -93,9 +109,17 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div className="absolute bottom-4 left-0 right-0 px-4 space-y-3">
           {user && (
             <div className="rounded-lg bg-sidebar-accent/30 px-4 py-3">
-              <p className="text-xs text-sidebar-foreground/70 truncate">
-                {user.email}
-              </p>
+              <div className="flex items-center justify-between gap-2">
+                <p className="text-xs text-sidebar-foreground/70 truncate flex-1">
+                  {user.email}
+                </p>
+                {isAdmin && (
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 shrink-0 border-primary/50 text-primary">
+                    <Shield className="h-2.5 w-2.5 mr-0.5" />
+                    Admin
+                  </Badge>
+                )}
+              </div>
             </div>
           )}
           <Button
