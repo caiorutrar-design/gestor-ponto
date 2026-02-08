@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { AdminRoute } from "@/components/AdminRoute";
 import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
@@ -28,11 +29,12 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/colaboradores" element={<ProtectedRoute><Colaboradores /></ProtectedRoute>} />
-            <Route path="/orgaos" element={<ProtectedRoute><Orgaos /></ProtectedRoute>} />
-            <Route path="/lotacoes" element={<ProtectedRoute><Lotacoes /></ProtectedRoute>} />
-            <Route path="/gerar-frequencia" element={<ProtectedRoute><GerarFrequencia /></ProtectedRoute>} />
-            <Route path="/frequencias" element={<ProtectedRoute><Frequencias /></ProtectedRoute>} />
+            {/* Admin-only routes */}
+            <Route path="/colaboradores" element={<AdminRoute><Colaboradores /></AdminRoute>} />
+            <Route path="/orgaos" element={<AdminRoute><Orgaos /></AdminRoute>} />
+            <Route path="/lotacoes" element={<AdminRoute><Lotacoes /></AdminRoute>} />
+            <Route path="/gerar-frequencia" element={<AdminRoute><GerarFrequencia /></AdminRoute>} />
+            <Route path="/frequencias" element={<AdminRoute><Frequencias /></AdminRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
