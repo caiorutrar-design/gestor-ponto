@@ -31,6 +31,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  ResponsiveTable,
+  MobileCardList,
+  MobileCard,
+  MobileCardHeader,
+  MobileCardRow,
+  MobileCardActions,
+} from "@/components/ui/responsive-table";
 import { useOrgaos, useCreateOrgao, useUpdateOrgao, useDeleteOrgao } from "@/hooks/useOrgaos";
 import { Orgao } from "@/types/database";
 import { Plus, Pencil, Trash2, Building2, Loader2 } from "lucide-react";
@@ -80,21 +88,21 @@ const OrgaosPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Órgãos</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Órgãos</h1>
+            <p className="text-sm text-muted-foreground">
               Gerencie os órgãos e unidades administrativas
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()} className="gap-2">
+              <Button onClick={() => handleOpenDialog()} className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Novo Órgão
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="mx-4 sm:max-w-md">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>
@@ -131,17 +139,19 @@ const OrgaosPage = () => {
                     />
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     disabled={createOrgao.isPending || updateOrgao.isPending}
+                    className="w-full sm:w-auto"
                   >
                     {(createOrgao.isPending || updateOrgao.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -169,63 +179,114 @@ const OrgaosPage = () => {
             </p>
           </div>
         ) : (
-          <div className="card-institutional overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Sigla</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {orgaos.map((orgao) => (
-                  <TableRow key={orgao.id}>
-                    <TableCell className="font-medium">{orgao.nome}</TableCell>
-                    <TableCell>{orgao.sigla || "-"}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(orgao)}
-                        >
-                          <Pencil className="h-4 w-4" />
+          <>
+            {/* Mobile Card Layout */}
+            <MobileCardList>
+              {orgaos.map((orgao) => (
+                <MobileCard key={orgao.id}>
+                  <MobileCardHeader
+                    title={orgao.nome}
+                    subtitle={orgao.sigla || undefined}
+                  />
+                  <MobileCardActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenDialog(orgao)}
+                      className="flex-1 gap-1"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Editar
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          Excluir
                         </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Confirmar exclusão
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja excluir o órgão "
-                                {orgao.nome}"? Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(orgao.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="mx-4">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir o órgão "{orgao.nome}"? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(orgao.id)}
+                            className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </MobileCardActions>
+                </MobileCard>
+              ))}
+            </MobileCardList>
+
+            {/* Desktop Table Layout */}
+            <ResponsiveTable>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Sigla</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {orgaos.map((orgao) => (
+                    <TableRow key={orgao.id}>
+                      <TableCell className="font-medium">{orgao.nome}</TableCell>
+                      <TableCell>{orgao.sigla || "-"}</TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(orgao)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Confirmar exclusão
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir o órgão "
+                                  {orgao.nome}"? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(orgao.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ResponsiveTable>
+          </>
         )}
       </div>
     </AppLayout>

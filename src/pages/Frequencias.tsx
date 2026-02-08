@@ -19,6 +19,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  ResponsiveTable,
+  MobileCardList,
+  MobileCard,
+  MobileCardHeader,
+  MobileCardRow,
+  MobileCardActions,
+} from "@/components/ui/responsive-table";
 import { useFrequencias, useUpdateFrequencia } from "@/hooks/useFrequencias";
 import { useColaboradores } from "@/hooks/useColaboradores";
 import { regenerateFrequenciaPDF } from "@/utils/pdfGenerator";
@@ -191,12 +199,25 @@ const FrequenciasPage = () => {
     }
   };
 
+  const StatusBadge = ({ signed }: { signed: boolean }) => (
+    signed ? (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
+        <CheckCircle className="h-3 w-3" />
+        Assinada
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
+        Pendente
+      </span>
+    )
+  );
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="page-header">
-          <h1 className="text-2xl font-bold text-foreground">Frequências Geradas</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Frequências Geradas</h1>
+          <p className="text-sm text-muted-foreground">
             Histórico de todas as folhas de frequência geradas
           </p>
         </div>
@@ -216,101 +237,164 @@ const FrequenciasPage = () => {
             </p>
           </div>
         ) : (
-          <div className="card-institutional overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Período</TableHead>
-                  <TableHead>Órgão</TableHead>
-                  <TableHead>Lotação</TableHead>
-                  <TableHead className="text-center">Colaboradores</TableHead>
-                  <TableHead>Data de Geração</TableHead>
-                  <TableHead className="text-center">Status</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {frequencias.map((frequencia) => (
-                  <TableRow key={frequencia.id}>
-                    <TableCell className="font-medium">
-                      {meses[frequencia.mes - 1]} / {frequencia.ano}
-                    </TableCell>
-                    <TableCell>
-                      {frequencia.orgao?.sigla || frequencia.orgao?.nome || "Todos"}
-                    </TableCell>
-                    <TableCell>
-                      {frequencia.lotacao?.nome || "Todas"}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-medium">
-                        {frequencia.quantidade_colaboradores}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {format(new Date(frequencia.gerado_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      {frequencia.folha_assinada_url ? (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
-                          <CheckCircle className="h-3 w-3" />
-                          Assinada
+          <>
+            {/* Mobile Card Layout */}
+            <MobileCardList>
+              {frequencias.map((frequencia) => (
+                <MobileCard key={frequencia.id}>
+                  <MobileCardHeader
+                    title={`${meses[frequencia.mes - 1]} / ${frequencia.ano}`}
+                    subtitle={frequencia.orgao?.sigla || frequencia.orgao?.nome || "Todos os órgãos"}
+                    badge={<StatusBadge signed={!!frequencia.folha_assinada_url} />}
+                  />
+                  <div className="space-y-1">
+                    <MobileCardRow
+                      label="Lotação"
+                      value={frequencia.lotacao?.nome || "Todas"}
+                    />
+                    <MobileCardRow
+                      label="Colaboradores"
+                      value={
+                        <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-medium">
+                          {frequencia.quantidade_colaboradores}
                         </span>
+                      }
+                    />
+                    <MobileCardRow
+                      label="Gerado em"
+                      value={format(new Date(frequencia.gerado_em), "dd/MM/yyyy", { locale: ptBR })}
+                    />
+                  </div>
+                  <MobileCardActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownloadPDF(frequencia)}
+                      disabled={downloadingId === frequencia.id}
+                      className="flex-1 gap-1"
+                    >
+                      {downloadingId === frequencia.id ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
-                        <span className="inline-flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">
-                          Pendente
-                        </span>
+                        <Download className="h-4 w-4" />
                       )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownloadPDF(frequencia)}
-                          disabled={downloadingId === frequencia.id}
-                          className="gap-1"
-                        >
-                          {downloadingId === frequencia.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Download className="h-4 w-4" />
-                          )}
-                          <span className="hidden sm:inline">PDF</span>
-                        </Button>
-                        
-                        {frequencia.folha_assinada_url ? (
+                      PDF
+                    </Button>
+                    
+                    {frequencia.folha_assinada_url ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleViewSignedSheet(frequencia.folha_assinada_url!)}
+                        className="flex-1 gap-1"
+                      >
+                        <Eye className="h-4 w-4" />
+                        Ver
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => handleOpenUploadDialog(frequencia.id)}
+                        className="flex-1 gap-1"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Anexar
+                      </Button>
+                    )}
+                  </MobileCardActions>
+                </MobileCard>
+              ))}
+            </MobileCardList>
+
+            {/* Desktop Table Layout */}
+            <ResponsiveTable>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Período</TableHead>
+                    <TableHead className="hidden sm:table-cell">Órgão</TableHead>
+                    <TableHead className="hidden lg:table-cell">Lotação</TableHead>
+                    <TableHead className="text-center">Colab.</TableHead>
+                    <TableHead className="hidden sm:table-cell">Data de Geração</TableHead>
+                    <TableHead className="text-center">Status</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {frequencias.map((frequencia) => (
+                    <TableRow key={frequencia.id}>
+                      <TableCell className="font-medium">
+                        {meses[frequencia.mes - 1]} / {frequencia.ano}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {frequencia.orgao?.sigla || frequencia.orgao?.nome || "Todos"}
+                      </TableCell>
+                      <TableCell className="hidden lg:table-cell">
+                        {frequencia.lotacao?.nome || "Todas"}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-medium">
+                          {frequencia.quantidade_colaboradores}
+                        </span>
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        {format(new Date(frequencia.gerado_em), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}
+                      </TableCell>
+                      <TableCell className="text-center">
+                        <StatusBadge signed={!!frequencia.folha_assinada_url} />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleViewSignedSheet(frequencia.folha_assinada_url!)}
+                            onClick={() => handleDownloadPDF(frequencia)}
+                            disabled={downloadingId === frequencia.id}
                             className="gap-1"
                           >
-                            <Eye className="h-4 w-4" />
-                            <span className="hidden sm:inline">Ver</span>
+                            {downloadingId === frequencia.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Download className="h-4 w-4" />
+                            )}
+                            <span className="hidden sm:inline">PDF</span>
                           </Button>
-                        ) : (
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            onClick={() => handleOpenUploadDialog(frequencia.id)}
-                            className="gap-1"
-                          >
-                            <Upload className="h-4 w-4" />
-                            <span className="hidden sm:inline">Anexar</span>
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                          
+                          {frequencia.folha_assinada_url ? (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewSignedSheet(frequencia.folha_assinada_url!)}
+                              className="gap-1"
+                            >
+                              <Eye className="h-4 w-4" />
+                              <span className="hidden sm:inline">Ver</span>
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              onClick={() => handleOpenUploadDialog(frequencia.id)}
+                              className="gap-1"
+                            >
+                              <Upload className="h-4 w-4" />
+                              <span className="hidden sm:inline">Anexar</span>
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ResponsiveTable>
+          </>
         )}
 
         {/* Upload Dialog */}
         <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-md mx-4">
             <DialogHeader>
               <DialogTitle>Anexar Folha Assinada</DialogTitle>
               <DialogDescription>
@@ -337,17 +421,19 @@ const FrequenciasPage = () => {
                 </p>
               )}
             </div>
-            <DialogFooter>
+            <DialogFooter className="flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={() => setUploadDialogOpen(false)}
                 disabled={uploadingFile}
+                className="w-full sm:w-auto"
               >
                 Cancelar
               </Button>
               <Button
                 onClick={handleUploadSignedSheet}
                 disabled={!selectedFile || uploadingFile}
+                className="w-full sm:w-auto"
               >
                 {uploadingFile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Enviar
