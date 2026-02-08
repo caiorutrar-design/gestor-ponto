@@ -38,6 +38,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  ResponsiveTable,
+  MobileCardList,
+  MobileCard,
+  MobileCardHeader,
+  MobileCardRow,
+  MobileCardActions,
+} from "@/components/ui/responsive-table";
 import { useLotacoes, useCreateLotacao, useUpdateLotacao, useDeleteLotacao } from "@/hooks/useLotacoes";
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { Lotacao } from "@/types/database";
@@ -89,21 +97,21 @@ const LotacoesPage = () => {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Lotações</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Lotações</h1>
+            <p className="text-sm text-muted-foreground">
               Gerencie os locais de trabalho dos colaboradores
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()} className="gap-2">
+              <Button onClick={() => handleOpenDialog()} className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Nova Lotação
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="mx-4 sm:max-w-md">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>
@@ -150,17 +158,19 @@ const LotacoesPage = () => {
                     />
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancelar
                   </Button>
                   <Button
                     type="submit"
                     disabled={createLotacao.isPending || updateLotacao.isPending || !formData.orgao_id}
+                    className="w-full sm:w-auto"
                   >
                     {(createLotacao.isPending || updateLotacao.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -198,67 +208,118 @@ const LotacoesPage = () => {
             </p>
           </div>
         ) : (
-          <div className="card-institutional overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nome</TableHead>
-                  <TableHead>Órgão</TableHead>
-                  <TableHead className="text-right">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {lotacoes.map((lotacao) => (
-                  <TableRow key={lotacao.id}>
-                    <TableCell className="font-medium">{lotacao.nome}</TableCell>
-                    <TableCell>
-                      {lotacao.orgao?.sigla
-                        ? `${lotacao.orgao.sigla} - ${lotacao.orgao.nome}`
-                        : lotacao.orgao?.nome || "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleOpenDialog(lotacao)}
-                        >
-                          <Pencil className="h-4 w-4" />
+          <>
+            {/* Mobile Card Layout */}
+            <MobileCardList>
+              {lotacoes.map((lotacao) => (
+                <MobileCard key={lotacao.id}>
+                  <MobileCardHeader
+                    title={lotacao.nome}
+                    subtitle={lotacao.orgao?.sigla || lotacao.orgao?.nome}
+                  />
+                  <MobileCardActions>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleOpenDialog(lotacao)}
+                      className="flex-1 gap-1"
+                    >
+                      <Pencil className="h-4 w-4" />
+                      Editar
+                    </Button>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                          Excluir
                         </Button>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Confirmar exclusão
-                              </AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Tem certeza que deseja excluir a lotação "
-                                {lotacao.nome}"? Esta ação não pode ser desfeita.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => handleDelete(lotacao.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                              >
-                                Excluir
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </div>
-                    </TableCell>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="mx-4">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Tem certeza que deseja excluir a lotação "{lotacao.nome}"? Esta ação não pode ser desfeita.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => handleDelete(lotacao.id)}
+                            className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          >
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </MobileCardActions>
+                </MobileCard>
+              ))}
+            </MobileCardList>
+
+            {/* Desktop Table Layout */}
+            <ResponsiveTable>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nome</TableHead>
+                    <TableHead>Órgão</TableHead>
+                    <TableHead className="text-right">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </TableHeader>
+                <TableBody>
+                  {lotacoes.map((lotacao) => (
+                    <TableRow key={lotacao.id}>
+                      <TableCell className="font-medium">{lotacao.nome}</TableCell>
+                      <TableCell>
+                        {lotacao.orgao?.sigla
+                          ? `${lotacao.orgao.sigla} - ${lotacao.orgao.nome}`
+                          : lotacao.orgao?.nome || "-"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleOpenDialog(lotacao)}
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <Trash2 className="h-4 w-4 text-destructive" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>
+                                  Confirmar exclusão
+                                </AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Tem certeza que deseja excluir a lotação "
+                                  {lotacao.nome}"? Esta ação não pode ser desfeita.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(lotacao.id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Excluir
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </ResponsiveTable>
+          </>
         )}
       </div>
     </AppLayout>

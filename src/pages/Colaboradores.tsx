@@ -40,6 +40,14 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import {
+  ResponsiveTable,
+  MobileCardList,
+  MobileCard,
+  MobileCardHeader,
+  MobileCardRow,
+  MobileCardActions,
+} from "@/components/ui/responsive-table";
+import {
   useColaboradores,
   useCreateColaborador,
   useUpdateColaborador,
@@ -141,24 +149,33 @@ const ColaboradoresPage = () => {
     (l) => l.orgao_id === formData.orgao_id
   );
 
+  const StatusBadge = ({ ativo, onClick }: { ativo: boolean; onClick: () => void }) => (
+    <button
+      onClick={onClick}
+      className={ativo ? "status-active" : "status-inactive"}
+    >
+      {ativo ? "Ativo" : "Inativo"}
+    </button>
+  );
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="page-header flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div className="page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Colaboradores</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-bold text-foreground">Colaboradores</h1>
+            <p className="text-sm text-muted-foreground">
               Gerencie os servidores e suas informações
             </p>
           </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
-              <Button onClick={() => handleOpenDialog()} className="gap-2">
+              <Button onClick={() => handleOpenDialog()} className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Novo Colaborador
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
               <form onSubmit={handleSubmit}>
                 <DialogHeader>
                   <DialogTitle>
@@ -171,7 +188,7 @@ const ColaboradoresPage = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="nome_completo">Nome Completo *</Label>
                       <Input
@@ -198,7 +215,7 @@ const ColaboradoresPage = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="orgao_id">Órgão *</Label>
                       <Select
@@ -259,7 +276,7 @@ const ColaboradoresPage = () => {
 
                   <div className="space-y-2">
                     <Label>Jornada de Trabalho</Label>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       <div className="space-y-1">
                         <Label htmlFor="entrada_manha" className="text-xs text-muted-foreground">
                           Entrada Manhã
@@ -326,11 +343,12 @@ const ColaboradoresPage = () => {
                     <Label htmlFor="ativo">Colaborador Ativo</Label>
                   </div>
                 </div>
-                <DialogFooter>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setIsDialogOpen(false)}
+                    className="w-full sm:w-auto"
                   >
                     Cancelar
                   </Button>
@@ -341,6 +359,7 @@ const ColaboradoresPage = () => {
                       updateColaborador.isPending ||
                       !formData.orgao_id
                     }
+                    className="w-full sm:w-auto"
                   >
                     {(createColaborador.isPending || updateColaborador.isPending) && (
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -395,87 +414,148 @@ const ColaboradoresPage = () => {
                 </p>
               </div>
             ) : (
-              <div className="card-institutional overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Nome</TableHead>
-                      <TableHead>Matrícula</TableHead>
-                      <TableHead className="hidden md:table-cell">Cargo</TableHead>
-                      <TableHead className="hidden lg:table-cell">Órgão</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Ações</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredColaboradores.map((colaborador) => (
-                  <TableRow key={colaborador.id}>
-                    <TableCell className="font-medium">
-                      {colaborador.nome_completo}
-                    </TableCell>
-                    <TableCell>{colaborador.matricula}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      {colaborador.cargo}
-                    </TableCell>
-                    <TableCell className="hidden lg:table-cell">
-                      {colaborador.orgao?.sigla || colaborador.orgao?.nome || "-"}
-                    </TableCell>
-                    <TableCell>
-                      <button
-                        onClick={() =>
-                          handleToggleStatus(colaborador.id, colaborador.ativo)
+              <>
+                {/* Mobile Card Layout */}
+                <MobileCardList>
+                  {filteredColaboradores.map((colaborador) => (
+                    <MobileCard key={colaborador.id}>
+                      <MobileCardHeader
+                        title={colaborador.nome_completo}
+                        subtitle={colaborador.matricula}
+                        badge={
+                          <StatusBadge
+                            ativo={colaborador.ativo}
+                            onClick={() => handleToggleStatus(colaborador.id, colaborador.ativo)}
+                          />
                         }
-                        className={
-                          colaborador.ativo ? "status-active" : "status-inactive"
-                        }
-                      >
-                        {colaborador.ativo ? "Ativo" : "Inativo"}
-                      </button>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      />
+                      <div className="space-y-1">
+                        <MobileCardRow label="Cargo" value={colaborador.cargo} />
+                        <MobileCardRow
+                          label="Órgão"
+                          value={colaborador.orgao?.sigla || colaborador.orgao?.nome || "-"}
+                        />
+                        {colaborador.lotacao && (
+                          <MobileCardRow label="Lotação" value={colaborador.lotacao.nome} />
+                        )}
+                      </div>
+                      <MobileCardActions>
                         <Button
-                          variant="ghost"
-                          size="icon"
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleOpenDialog(colaborador)}
+                          className="flex-1 gap-1"
                         >
                           <Pencil className="h-4 w-4" />
+                          Editar
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="h-4 w-4 text-destructive" />
+                            <Button variant="outline" size="sm" className="flex-1 gap-1 text-destructive hover:text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                              Excluir
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="mx-4">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>
-                                Confirmar exclusão
-                              </AlertDialogTitle>
+                              <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Tem certeza que deseja excluir o colaborador "
-                                {colaborador.nome_completo}"? Esta ação não pode
-                                ser desfeita.
+                                Tem certeza que deseja excluir o colaborador "{colaborador.nome_completo}"? Esta ação não pode ser desfeita.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                            <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                              <AlertDialogCancel className="w-full sm:w-auto">Cancelar</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => handleDelete(colaborador.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                className="w-full sm:w-auto bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               >
                                 Excluir
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
+                      </MobileCardActions>
+                    </MobileCard>
+                  ))}
+                </MobileCardList>
+
+                {/* Desktop Table Layout */}
+                <ResponsiveTable>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Nome</TableHead>
+                        <TableHead>Matrícula</TableHead>
+                        <TableHead className="hidden lg:table-cell">Cargo</TableHead>
+                        <TableHead className="hidden xl:table-cell">Órgão</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Ações</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredColaboradores.map((colaborador) => (
+                        <TableRow key={colaborador.id}>
+                          <TableCell className="font-medium max-w-[200px] truncate">
+                            {colaborador.nome_completo}
+                          </TableCell>
+                          <TableCell>{colaborador.matricula}</TableCell>
+                          <TableCell className="hidden lg:table-cell">
+                            {colaborador.cargo}
+                          </TableCell>
+                          <TableCell className="hidden xl:table-cell">
+                            {colaborador.orgao?.sigla || colaborador.orgao?.nome || "-"}
+                          </TableCell>
+                          <TableCell>
+                            <StatusBadge
+                              ativo={colaborador.ativo}
+                              onClick={() => handleToggleStatus(colaborador.id, colaborador.ativo)}
+                            />
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleOpenDialog(colaborador)}
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <AlertDialog>
+                                <AlertDialogTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Trash2 className="h-4 w-4 text-destructive" />
+                                  </Button>
+                                </AlertDialogTrigger>
+                                <AlertDialogContent>
+                                  <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                      Confirmar exclusão
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                      Tem certeza que deseja excluir o colaborador "
+                                      {colaborador.nome_completo}"? Esta ação não pode
+                                      ser desfeita.
+                                    </AlertDialogDescription>
+                                  </AlertDialogHeader>
+                                  <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                    <AlertDialogAction
+                                      onClick={() => handleDelete(colaborador.id)}
+                                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                    >
+                                      Excluir
+                                    </AlertDialogAction>
+                                  </AlertDialogFooter>
+                                </AlertDialogContent>
+                              </AlertDialog>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </ResponsiveTable>
+              </>
             )}
           </div>
         )}

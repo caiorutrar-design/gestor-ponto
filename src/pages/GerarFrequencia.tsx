@@ -122,13 +122,13 @@ const GerarFrequenciaPage = () => {
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="page-header">
-          <h1 className="text-2xl font-bold text-foreground">Gerar Frequência</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-foreground">Gerar Frequência</h1>
+          <p className="text-sm text-muted-foreground">
             Selecione o período e os colaboradores para gerar as folhas de frequência
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-3">
+        <div className="grid gap-4 sm:gap-6 lg:grid-cols-3">
           {/* Filtros */}
           <Card className="lg:col-span-1">
             <CardHeader>
@@ -141,7 +141,7 @@ const GerarFrequenciaPage = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="mes">Mês</Label>
                   <Select
@@ -293,7 +293,7 @@ const GerarFrequenciaPage = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4">
                   <div className="bg-muted/50 rounded-lg p-4">
                     <p className="text-sm text-muted-foreground">Mês/Ano</p>
                     <p className="text-lg font-semibold">
