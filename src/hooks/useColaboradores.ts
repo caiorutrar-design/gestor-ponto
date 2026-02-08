@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Colaborador, ColaboradorForm } from "@/types/database";
 import { toast } from "sonner";
+import { mapSecurityError } from "@/lib/securityUtils";
 
 interface UseColaboradoresOptions {
   orgaoId?: string;
@@ -59,7 +60,7 @@ export function useCreateColaborador() {
       toast.success("Colaborador cadastrado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao cadastrar colaborador: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -84,7 +85,7 @@ export function useUpdateColaborador() {
       toast.success("Colaborador atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar colaborador: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -106,7 +107,7 @@ export function useDeleteColaborador() {
       toast.success("Colaborador removido com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao remover colaborador: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -131,7 +132,7 @@ export function useToggleColaboradorStatus() {
       toast.success(data.ativo ? "Colaborador ativado!" : "Colaborador inativado!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao alterar status: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }

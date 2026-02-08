@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { FrequenciaGerada } from "@/types/database";
 import { toast } from "sonner";
+import { mapSecurityError } from "@/lib/securityUtils";
 
 export function useFrequencias() {
   return useQuery({
@@ -42,7 +43,7 @@ export function useCreateFrequencia() {
       queryClient.invalidateQueries({ queryKey: ["frequencias"] });
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao registrar frequência: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -71,7 +72,7 @@ export function useUpdateFrequencia() {
       queryClient.invalidateQueries({ queryKey: ["frequencias"] });
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar frequência: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }

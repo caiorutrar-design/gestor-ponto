@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Orgao, OrgaoForm } from "@/types/database";
 import { toast } from "sonner";
+import { mapSecurityError } from "@/lib/securityUtils";
 
 export function useOrgaos() {
   return useQuery({
@@ -37,7 +38,7 @@ export function useCreateOrgao() {
       toast.success("Órgão cadastrado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao cadastrar órgão: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -62,7 +63,7 @@ export function useUpdateOrgao() {
       toast.success("Órgão atualizado com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar órgão: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -84,7 +85,7 @@ export function useDeleteOrgao() {
       toast.success("Órgão removido com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao remover órgão: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }

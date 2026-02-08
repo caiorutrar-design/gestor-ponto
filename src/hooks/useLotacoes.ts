@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Lotacao, LotacaoForm } from "@/types/database";
 import { toast } from "sonner";
+import { mapSecurityError } from "@/lib/securityUtils";
 
 export function useLotacoes(orgaoId?: string) {
   return useQuery({
@@ -43,7 +44,7 @@ export function useCreateLotacao() {
       toast.success("Lotação cadastrada com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao cadastrar lotação: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -68,7 +69,7 @@ export function useUpdateLotacao() {
       toast.success("Lotação atualizada com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao atualizar lotação: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }
@@ -90,7 +91,7 @@ export function useDeleteLotacao() {
       toast.success("Lotação removida com sucesso!");
     },
     onError: (error: Error) => {
-      toast.error(`Erro ao remover lotação: ${error.message}`);
+      toast.error(mapSecurityError(error));
     },
   });
 }

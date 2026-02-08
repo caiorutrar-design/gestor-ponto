@@ -146,13 +146,10 @@ const FrequenciasPage = () => {
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('folhas-assinadas')
-        .getPublicUrl(fileName);
-
+      // Store only the filename - we'll generate signed URLs on-demand
       await updateFrequencia.mutateAsync({
         id: selectedFrequencia,
-        folha_assinada_url: publicUrl,
+        folha_assinada_url: fileName, // Store filename, not public URL
         assinada_em: new Date().toISOString(),
       });
 
@@ -175,8 +172,23 @@ const FrequenciasPage = () => {
     }
   };
 
-  const handleViewSignedSheet = (url: string) => {
-    window.open(url, '_blank');
+  const handleViewSignedSheet = async (storedPath: string) => {
+    try {
+      // Generate a signed URL for secure, time-limited access to private storage
+      const { data, error } = await supabase.storage
+        .from('folhas-assinadas')
+        .createSignedUrl(storedPath, 3600); // Valid for 1 hour
+
+      if (error) throw error;
+
+      window.open(data.signedUrl, '_blank');
+    } catch (error) {
+      toast({
+        title: "Erro ao abrir arquivo",
+        description: "Não foi possível gerar o link de acesso.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
