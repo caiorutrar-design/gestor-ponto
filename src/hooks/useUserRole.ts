@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { logError } from "@/lib/logger";
 
 export type AppRole = "admin" | "user";
 
@@ -26,7 +27,7 @@ export function useUserRole() {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching user role:", error);
+        logError("useUserRole", error);
         return null;
       }
 
