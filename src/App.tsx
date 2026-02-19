@@ -5,13 +5,16 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
-import { AdminRoute } from "@/components/AdminRoute";
+import { AdminOrSuperRoute } from "@/components/AdminOrSuperRoute";
+import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
 import Lotacoes from "./pages/Lotacoes";
 import GerarFrequencia from "./pages/GerarFrequencia";
 import Frequencias from "./pages/Frequencias";
+import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
+import LogsAuditoria from "./pages/LogsAuditoria";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import NotFound from "./pages/NotFound";
@@ -29,13 +32,15 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            {/* Admin-only routes */}
-            <Route path="/colaboradores" element={<AdminRoute><Colaboradores /></AdminRoute>} />
-            <Route path="/orgaos" element={<AdminRoute><Orgaos /></AdminRoute>} />
-            <Route path="/lotacoes" element={<AdminRoute><Lotacoes /></AdminRoute>} />
-            <Route path="/gerar-frequencia" element={<AdminRoute><GerarFrequencia /></AdminRoute>} />
-            <Route path="/frequencias" element={<AdminRoute><Frequencias /></AdminRoute>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Admin + Super Admin routes */}
+            <Route path="/colaboradores" element={<AdminOrSuperRoute><Colaboradores /></AdminOrSuperRoute>} />
+            <Route path="/orgaos" element={<AdminOrSuperRoute><Orgaos /></AdminOrSuperRoute>} />
+            <Route path="/lotacoes" element={<AdminOrSuperRoute><Lotacoes /></AdminOrSuperRoute>} />
+            <Route path="/gerar-frequencia" element={<AdminOrSuperRoute><GerarFrequencia /></AdminOrSuperRoute>} />
+            <Route path="/frequencias" element={<AdminOrSuperRoute><Frequencias /></AdminOrSuperRoute>} />
+            <Route path="/logs-auditoria" element={<AdminOrSuperRoute><LogsAuditoria /></AdminOrSuperRoute>} />
+            {/* Super Admin only */}
+            <Route path="/gerenciar-usuarios" element={<SuperAdminRoute><GerenciamentoUsuarios /></SuperAdminRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
