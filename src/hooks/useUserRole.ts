@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { logError } from "@/lib/logger";
 
-export type AppRole = "admin" | "user";
+export type AppRole = "super_admin" | "admin" | "user";
 
 interface UserRole {
   id: string;
@@ -39,10 +39,11 @@ export function useUserRole() {
 
 export function useIsAdmin() {
   const { data: roleData, isLoading } = useUserRole();
-  
+
   return {
-    isAdmin: roleData?.role === "admin",
+    isAdmin: roleData?.role === "admin" || roleData?.role === "super_admin",
+    isSuperAdmin: roleData?.role === "super_admin",
     isLoading,
-    role: roleData?.role || null,
+    role: (roleData?.role as AppRole) || null,
   };
 }
