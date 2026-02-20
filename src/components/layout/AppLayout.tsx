@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Users, Building2, MapPin, FileText, Menu, X, LogOut,
-  Shield, ShieldCheck, ClipboardList, UserCog,
+  LayoutDashboard, Users, Building2, MapPin, Menu, X, LogOut,
+  Shield, ShieldCheck, ClipboardList, UserCog, Clock, Timer,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -19,10 +19,11 @@ interface NavItem {
 
 const navigation: NavItem[] = [
   { name: "Início", href: "/", icon: LayoutDashboard },
+  { name: "Registro de Ponto", href: "/registro-ponto", icon: Clock },
   { name: "Colaboradores", href: "/colaboradores", icon: Users, requiredRole: "admin" },
   { name: "Órgãos", href: "/orgaos", icon: Building2, requiredRole: "admin" },
   { name: "Lotações", href: "/lotacoes", icon: MapPin, requiredRole: "admin" },
-  { name: "Frequências Geradas", href: "/frequencias", icon: FileText, requiredRole: "admin" },
+  { name: "Registros de Ponto", href: "/gerenciar-pontos", icon: Timer, requiredRole: "admin" },
   { name: "Logs de Auditoria", href: "/logs-auditoria", icon: ClipboardList, requiredRole: "admin" },
   { name: "Gerenciar Usuários", href: "/gerenciar-usuarios", icon: UserCog, requiredRole: "super_admin" },
 ];
@@ -41,7 +42,7 @@ export function AppLayout({ children }: AppLayoutProps) {
   const visibleNavigation = navigation.filter((item) => {
     if (!item.requiredRole) return true;
     if (item.requiredRole === "super_admin") return isSuperAdmin;
-    if (item.requiredRole === "admin") return isAdmin; // isAdmin includes super_admin
+    if (item.requiredRole === "admin") return isAdmin;
     return false;
   });
 
@@ -69,7 +70,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         )}
       >
         <div className="flex h-16 items-center justify-between px-4 sidebar-header-gradient">
-          <h1 className="text-lg font-bold text-sidebar-foreground">Gestão de Frequência</h1>
+          <h1 className="text-lg font-bold text-sidebar-foreground">Gestão de Ponto</h1>
           <Button
             variant="ghost" size="icon"
             className="lg:hidden text-sidebar-foreground hover:bg-sidebar-accent"
@@ -124,8 +125,8 @@ export function AppLayout({ children }: AppLayoutProps) {
             Sair
           </Button>
           <div className="rounded-lg bg-sidebar-accent/30 px-4 py-3">
-            <p className="text-xs text-sidebar-foreground/70">Sistema de Gestão de Frequência</p>
-            <p className="text-xs text-sidebar-foreground/50 mt-1">v2.0.0</p>
+            <p className="text-xs text-sidebar-foreground/70">Sistema de Gestão de Ponto</p>
+            <p className="text-xs text-sidebar-foreground/50 mt-1">v3.0.0</p>
           </div>
         </div>
       </aside>
@@ -135,7 +136,7 @@ export function AppLayout({ children }: AppLayoutProps) {
           <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <h1 className="font-semibold text-foreground">Gestão de Frequência</h1>
+          <h1 className="font-semibold text-foreground">Gestão de Ponto</h1>
         </header>
         <main className="p-4 md:p-6 lg:p-8">{children}</main>
       </div>
