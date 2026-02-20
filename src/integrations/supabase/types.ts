@@ -64,6 +64,7 @@ export type Database = {
           matricula: string
           nome_completo: string
           orgao_id: string
+          senha_ponto: string | null
           updated_at: string
         }
         Insert: {
@@ -79,6 +80,7 @@ export type Database = {
           matricula: string
           nome_completo: string
           orgao_id: string
+          senha_ponto?: string | null
           updated_at?: string
         }
         Update: {
@@ -94,6 +96,7 @@ export type Database = {
           matricula?: string
           nome_completo?: string
           orgao_id?: string
+          senha_ponto?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -249,6 +252,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      registros_ponto: {
+        Row: {
+          colaborador_id: string
+          created_at: string
+          data_registro: string
+          hora_registro: string
+          id: string
+          timestamp_registro: string
+          tipo: string
+        }
+        Insert: {
+          colaborador_id: string
+          created_at?: string
+          data_registro?: string
+          hora_registro?: string
+          id?: string
+          timestamp_registro?: string
+          tipo: string
+        }
+        Update: {
+          colaborador_id?: string
+          created_at?: string
+          data_registro?: string
+          hora_registro?: string
+          id?: string
+          timestamp_registro?: string
+          tipo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registros_ponto_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

@@ -33,21 +33,6 @@ export interface Colaborador {
   lotacao?: Lotacao;
 }
 
-export interface FrequenciaGerada {
-  id: string;
-  mes: number;
-  ano: number;
-  orgao_id: string | null;
-  lotacao_id: string | null;
-  quantidade_colaboradores: number;
-  gerado_em: string;
-  created_at: string;
-  folha_assinada_url: string | null;
-  assinada_em: string | null;
-  orgao?: Orgao;
-  lotacao?: Lotacao;
-}
-
 export interface ColaboradorForm {
   nome_completo: string;
   matricula: string;

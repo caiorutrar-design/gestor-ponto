@@ -11,8 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
 import Lotacoes from "./pages/Lotacoes";
-import GerarFrequencia from "./pages/GerarFrequencia";
-import Frequencias from "./pages/Frequencias";
+import RegistroPonto from "./pages/RegistroPonto";
+import GerenciarPontos from "./pages/GerenciarPontos";
 import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
 import LogsAuditoria from "./pages/LogsAuditoria";
 import Login from "./pages/Login";
@@ -32,12 +32,12 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/registro-ponto" element={<ProtectedRoute><RegistroPonto /></ProtectedRoute>} />
             {/* Admin + Super Admin routes */}
             <Route path="/colaboradores" element={<AdminOrSuperRoute><Colaboradores /></AdminOrSuperRoute>} />
             <Route path="/orgaos" element={<AdminOrSuperRoute><Orgaos /></AdminOrSuperRoute>} />
             <Route path="/lotacoes" element={<AdminOrSuperRoute><Lotacoes /></AdminOrSuperRoute>} />
-            <Route path="/gerar-frequencia" element={<AdminOrSuperRoute><GerarFrequencia /></AdminOrSuperRoute>} />
-            <Route path="/frequencias" element={<AdminOrSuperRoute><Frequencias /></AdminOrSuperRoute>} />
+            <Route path="/gerenciar-pontos" element={<AdminOrSuperRoute><GerenciarPontos /></AdminOrSuperRoute>} />
             <Route path="/logs-auditoria" element={<AdminOrSuperRoute><LogsAuditoria /></AdminOrSuperRoute>} />
             {/* Super Admin only */}
             <Route path="/gerenciar-usuarios" element={<SuperAdminRoute><GerenciamentoUsuarios /></SuperAdminRoute>} />
