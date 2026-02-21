@@ -14,7 +14,7 @@ interface NavItem {
   name: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  requiredRole?: "admin" | "super_admin";
+  requiredRole?: "admin" | "super_admin" | "gestor";
 }
 
 const navigation: NavItem[] = [
@@ -23,7 +23,7 @@ const navigation: NavItem[] = [
   { name: "Colaboradores", href: "/colaboradores", icon: Users, requiredRole: "admin" },
   { name: "Órgãos", href: "/orgaos", icon: Building2, requiredRole: "admin" },
   { name: "Lotações", href: "/lotacoes", icon: MapPin, requiredRole: "admin" },
-  { name: "Registros de Ponto", href: "/gerenciar-pontos", icon: Timer, requiredRole: "admin" },
+  { name: "Registros de Ponto", href: "/gerenciar-pontos", icon: Timer, requiredRole: "gestor" },
   { name: "Logs de Auditoria", href: "/logs-auditoria", icon: ClipboardList, requiredRole: "admin" },
   { name: "Gerenciar Usuários", href: "/gerenciar-usuarios", icon: UserCog, requiredRole: "super_admin" },
 ];
@@ -36,13 +36,14 @@ export function AppLayout({ children }: AppLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut, user } = useAuth();
-  const { isAdmin, isSuperAdmin, role } = useIsAdmin();
+  const { isAdmin, isSuperAdmin, isGestor, role } = useIsAdmin();
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const visibleNavigation = navigation.filter((item) => {
     if (!item.requiredRole) return true;
     if (item.requiredRole === "super_admin") return isSuperAdmin;
     if (item.requiredRole === "admin") return isAdmin;
+    if (item.requiredRole === "gestor") return isAdmin || isGestor;
     return false;
   });
 
@@ -51,7 +52,7 @@ export function AppLayout({ children }: AppLayoutProps) {
     navigate("/login");
   };
 
-  const roleLabel = role === "super_admin" ? "Super Admin" : role === "admin" ? "Admin" : "Usuário";
+  const roleLabel = role === "super_admin" ? "Super Admin" : role === "admin" ? "RH" : role === "gestor" ? "Gestor" : "Colaborador";
   const RoleIcon = role === "super_admin" ? ShieldCheck : Shield;
 
   return (

@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Verify the calling user is a super_admin
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!,
@@ -35,12 +34,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Check if calling user is super_admin using service role
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Verify caller is super_admin
     const { data: roleData } = await supabaseAdmin
       .from("user_roles")
       .select("role")
@@ -49,15 +48,113 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!roleData) {
-      return new Response(JSON.stringify({ error: "Acesso negado. Apenas Super Admins podem criar usuários." }), {
+      return new Response(JSON.stringify({ error: "Acesso negado. Apenas Super Admins podem gerenciar usuários." }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    const { email, password, nome, role, departamento } = await req.json();
+    const body = await req.json();
+    const { action } = body;
 
-    // Validate inputs
+    // EDIT USER
+    if (action === "edit") {
+      const { user_id, nome, email, password, role, departamento } = body;
+
+      if (!user_id) {
+        return new Response(JSON.stringify({ error: "user_id é obrigatório" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const changes: Record<string, { old: unknown; new: unknown }> = {};
+
+      // Get current data for audit
+      const { data: currentProfile } = await supabaseAdmin
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      const { data: currentRole } = await supabaseAdmin
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user_id)
+        .maybeSingle();
+
+      // Update auth user if email or password changed
+      const authUpdates: Record<string, string> = {};
+      if (email && email !== currentProfile?.email) {
+        authUpdates.email = email;
+        changes.email = { old: currentProfile?.email, new: email };
+      }
+      if (password) {
+        authUpdates.password = password;
+        changes.password = { old: "***", new: "***" };
+      }
+
+      if (Object.keys(authUpdates).length > 0) {
+        const { error: updateAuthError } = await supabaseAdmin.auth.admin.updateUserById(user_id, authUpdates);
+        if (updateAuthError) {
+          const msg = updateAuthError.message.includes("already been registered")
+            ? "Este email já está cadastrado por outro usuário."
+            : updateAuthError.message;
+          return new Response(JSON.stringify({ error: msg }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+
+      // Update profile
+      const profileUpdates: Record<string, string> = {};
+      if (nome && nome !== currentProfile?.nome_completo) {
+        profileUpdates.nome_completo = nome;
+        changes.nome = { old: currentProfile?.nome_completo, new: nome };
+      }
+      if (email && email !== currentProfile?.email) {
+        profileUpdates.email = email;
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        await supabaseAdmin.from("profiles").update(profileUpdates).eq("user_id", user_id);
+      }
+
+      // Update role - delete old, insert new (avoids duplicate key)
+      if (role && role !== currentRole?.role) {
+        if (!["admin", "user", "gestor"].includes(role)) {
+          return new Response(JSON.stringify({ error: "Papel inválido." }), {
+            status: 400,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        changes.role = { old: currentRole?.role, new: role };
+        await supabaseAdmin.from("user_roles").delete().eq("user_id", user_id);
+        await supabaseAdmin.from("user_roles").insert({ user_id, role });
+      }
+
+      // Audit log
+      if (Object.keys(changes).length > 0) {
+        await supabaseAdmin.from("audit_logs").insert({
+          user_id: callingUser.id,
+          user_email: callingUser.email,
+          action_type: "user_updated",
+          entity_type: "user",
+          entity_id: user_id,
+          details: { edited_email: email || currentProfile?.email, changes },
+        });
+      }
+
+      return new Response(
+        JSON.stringify({ success: true }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // CREATE USER (default action)
+    const { email, password, nome, role, departamento } = body;
+
     if (!email || !password || !nome || !role) {
       return new Response(JSON.stringify({ error: "Campos obrigatórios: email, password, nome, role" }), {
         status: 400,
@@ -65,8 +162,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!["admin", "user"].includes(role)) {
-      return new Response(JSON.stringify({ error: "Papel inválido. Use 'admin' ou 'user'." }), {
+    if (!["admin", "user", "gestor"].includes(role)) {
+      return new Response(JSON.stringify({ error: "Papel inválido. Use 'admin', 'user' ou 'gestor'." }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -79,7 +176,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Create user with admin API
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
@@ -97,18 +193,15 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Update profile with nome
     await supabaseAdmin
       .from("profiles")
       .update({ nome_completo: nome })
       .eq("user_id", newUser.user!.id);
 
-    // Assign role
     await supabaseAdmin
       .from("user_roles")
       .insert({ user_id: newUser.user!.id, role });
 
-    // Log audit
     await supabaseAdmin.from("audit_logs").insert({
       user_id: callingUser.id,
       user_email: callingUser.email,

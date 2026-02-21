@@ -18,13 +18,13 @@ import { Loader2, Search, ClipboardList, ChevronLeft, ChevronRight } from "lucid
 
 const actionLabels: Record<string, string> = {
   user_created: "Usuário Criado",
+  user_updated: "Usuário Editado",
   user_deleted: "Usuário Excluído",
   login: "Login",
   logout: "Logout",
   colaborador_created: "Colaborador Criado",
   colaborador_updated: "Colaborador Atualizado",
   colaborador_deleted: "Colaborador Excluído",
-  frequencia_generated: "Frequência Gerada",
   access_denied: "Acesso Negado",
 };
 
@@ -101,12 +101,12 @@ const LogsAuditoria = () => {
             <SelectContent>
               <SelectItem value="all">Todas as ações</SelectItem>
               <SelectItem value="user_created">Usuário Criado</SelectItem>
+              <SelectItem value="user_updated">Usuário Editado</SelectItem>
               <SelectItem value="login">Login</SelectItem>
               <SelectItem value="logout">Logout</SelectItem>
               <SelectItem value="colaborador_created">Colaborador Criado</SelectItem>
               <SelectItem value="colaborador_updated">Colaborador Atualizado</SelectItem>
               <SelectItem value="colaborador_deleted">Colaborador Excluído</SelectItem>
-              <SelectItem value="frequencia_generated">Frequência Gerada</SelectItem>
               <SelectItem value="access_denied">Acesso Negado</SelectItem>
             </SelectContent>
           </Select>
