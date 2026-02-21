@@ -19,11 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Loader2, Users, Shield, ShieldCheck, User, Trash2 } from "lucide-react";
-import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { Plus, Loader2, Users, Shield, ShieldCheck, User, Pencil, Eye } from "lucide-react";
 
 interface UserWithRole {
   id: string;
@@ -36,58 +32,61 @@ interface UserWithRole {
 
 const roleLabels: Record<string, string> = {
   super_admin: "Super Admin",
-  admin: "Administrador",
-  user: "Usuário Comum",
+  admin: "Administrador (RH)",
+  gestor: "Gestor",
+  user: "Colaborador",
 };
 
 const roleBadgeVariant = (role: string | null) => {
   switch (role) {
     case "super_admin": return "destructive" as const;
     case "admin": return "default" as const;
-    default: return "secondary" as const;
+    case "gestor": return "secondary" as const;
+    default: return "outline" as const;
+  }
+};
+
+const RoleIcon = ({ role }: { role: string | null }) => {
+  switch (role) {
+    case "super_admin": return <ShieldCheck className="h-4 w-4" />;
+    case "admin": return <Shield className="h-4 w-4" />;
+    case "gestor": return <Eye className="h-4 w-4" />;
+    default: return <User className="h-4 w-4" />;
   }
 };
 
 const GerenciamentoUsuarios = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [formData, setFormData] = useState({
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<UserWithRole | null>(null);
+  const [createForm, setCreateForm] = useState({
     nome: "", email: "", password: "", role: "user", departamento: "",
+  });
+  const [editForm, setEditForm] = useState({
+    nome: "", email: "", password: "", role: "",
   });
 
   const { data: users = [], isLoading } = useQuery({
     queryKey: ["all-users"],
     queryFn: async () => {
-      const { data: profiles, error } = await supabase
-        .from("profiles")
-        .select("*");
+      const { data: profiles, error } = await supabase.from("profiles").select("*");
       if (error) throw error;
-
-      const { data: roles, error: rolesError } = await supabase
-        .from("user_roles")
-        .select("*");
+      const { data: roles, error: rolesError } = await supabase.from("user_roles").select("*");
       if (rolesError) throw rolesError;
-
       return profiles.map((p) => {
         const userRole = roles?.find((r) => r.user_id === p.user_id);
         return {
-          id: p.id,
-          user_id: p.user_id,
-          email: p.email,
-          nome_completo: p.nome_completo,
-          role: userRole?.role || null,
-          created_at: p.created_at,
+          id: p.id, user_id: p.user_id, email: p.email,
+          nome_completo: p.nome_completo, role: userRole?.role || null, created_at: p.created_at,
         } as UserWithRole;
       });
     },
   });
 
   const createUser = useMutation({
-    mutationFn: async (data: typeof formData) => {
-      const { data: result, error } = await supabase.functions.invoke("create-user", {
-        body: data,
-      });
+    mutationFn: async (data: typeof createForm) => {
+      const { data: result, error } = await supabase.functions.invoke("create-user", { body: data });
       if (error) throw new Error(error.message || "Erro ao criar usuário");
       if (result?.error) throw new Error(result.error);
       return result;
@@ -95,53 +94,39 @@ const GerenciamentoUsuarios = () => {
     onSuccess: () => {
       toast({ title: "Usuário criado com sucesso!" });
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
-      setIsDialogOpen(false);
-      setFormData({ nome: "", email: "", password: "", role: "user", departamento: "" });
+      setIsCreateOpen(false);
+      setCreateForm({ nome: "", email: "", password: "", role: "user", departamento: "" });
     },
     onError: (error: Error) => {
       toast({ title: "Erro ao criar usuário", description: error.message, variant: "destructive" });
     },
   });
 
-  const deleteUser = useMutation({
-    mutationFn: async (userId: string) => {
-      // Remove role first
-      const { error } = await supabase
-        .from("user_roles")
-        .delete()
-        .eq("user_id", userId);
-      if (error) throw error;
+  const editUser = useMutation({
+    mutationFn: async (data: { user_id: string } & typeof editForm) => {
+      const { data: result, error } = await supabase.functions.invoke("create-user", {
+        body: { action: "edit", ...data },
+      });
+      if (error) throw new Error(error.message || "Erro ao editar usuário");
+      if (result?.error) throw new Error(result.error);
+      return result;
     },
     onSuccess: () => {
-      toast({ title: "Papel do usuário removido" });
+      toast({ title: "Usuário atualizado com sucesso!" });
       queryClient.invalidateQueries({ queryKey: ["all-users"] });
+      setEditingUser(null);
     },
     onError: (error: Error) => {
-      toast({ title: "Erro", description: error.message, variant: "destructive" });
+      toast({ title: "Erro ao editar usuário", description: error.message, variant: "destructive" });
     },
   });
 
   const updateRole = useMutation({
     mutationFn: async ({ userId, newRole }: { userId: string; newRole: string }) => {
-      // Check if role exists
-      const { data: existing } = await supabase
-        .from("user_roles")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (existing) {
-        const { error } = await supabase
-          .from("user_roles")
-          .update({ role: newRole as "admin" | "user" })
-          .eq("user_id", userId);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("user_roles")
-          .insert({ user_id: userId, role: newRole as "admin" | "user" });
-        if (error) throw error;
-      }
+      // Delete then insert to avoid unique constraint issues
+      await supabase.from("user_roles").delete().eq("user_id", userId);
+      const { error } = await supabase.from("user_roles").insert({ user_id: userId, role: newRole as "admin" | "user" | "gestor" });
+      if (error) throw error;
     },
     onSuccess: () => {
       toast({ title: "Papel atualizado" });
@@ -152,17 +137,14 @@ const GerenciamentoUsuarios = () => {
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    createUser.mutate(formData);
-  };
-
-  const RoleIcon = ({ role }: { role: string | null }) => {
-    switch (role) {
-      case "super_admin": return <ShieldCheck className="h-4 w-4" />;
-      case "admin": return <Shield className="h-4 w-4" />;
-      default: return <User className="h-4 w-4" />;
-    }
+  const openEditDialog = (user: UserWithRole) => {
+    setEditingUser(user);
+    setEditForm({
+      nome: user.nome_completo || "",
+      email: user.email || "",
+      password: "",
+      role: user.role || "user",
+    });
   };
 
   return (
@@ -173,79 +155,49 @@ const GerenciamentoUsuarios = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-foreground">Gerenciamento de Usuários</h1>
             <p className="text-sm text-muted-foreground">Crie e gerencie usuários e seus níveis de acesso</p>
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+          <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
             <DialogTrigger asChild>
               <Button className="gap-2 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                Novo Usuário
+                <Plus className="h-4 w-4" /> Novo Usuário
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-md mx-4">
-              <form onSubmit={handleSubmit}>
+              <form onSubmit={(e) => { e.preventDefault(); createUser.mutate(createForm); }}>
                 <DialogHeader>
                   <DialogTitle>Criar Novo Usuário</DialogTitle>
-                  <DialogDescription>Preencha os dados para criar um novo usuário no sistema</DialogDescription>
+                  <DialogDescription>Preencha os dados para criar um novo usuário</DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">
                   <div className="space-y-2">
-                    <Label htmlFor="nome">Nome Completo *</Label>
-                    <Input
-                      id="nome"
-                      value={formData.nome}
-                      onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
-                      placeholder="Nome completo"
-                      required
-                    />
+                    <Label>Nome Completo *</Label>
+                    <Input value={createForm.nome} onChange={(e) => setCreateForm({ ...createForm, nome: e.target.value })} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="email">Email *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="usuario@email.com"
-                      required
-                    />
+                    <Label>Email *</Label>
+                    <Input type="email" value={createForm.email} onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })} required />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="password">Senha *</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="Mínimo 6 caracteres"
-                      required
-                      minLength={6}
-                    />
+                    <Label>Senha *</Label>
+                    <Input type="password" value={createForm.password} onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })} required minLength={6} placeholder="Mínimo 6 caracteres" />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="role">Papel *</Label>
-                    <Select value={formData.role} onValueChange={(v) => setFormData({ ...formData, role: v })}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                    <Label>Papel *</Label>
+                    <Select value={createForm.role} onValueChange={(v) => setCreateForm({ ...createForm, role: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="admin">Administrador (RH)</SelectItem>
-                        <SelectItem value="user">Usuário Comum</SelectItem>
+                        <SelectItem value="gestor">Gestor</SelectItem>
+                        <SelectItem value="user">Colaborador</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="departamento">Departamento</Label>
-                    <Input
-                      id="departamento"
-                      value={formData.departamento}
-                      onChange={(e) => setFormData({ ...formData, departamento: e.target.value })}
-                      placeholder="Opcional"
-                    />
+                    <Label>Departamento</Label>
+                    <Input value={createForm.departamento} onChange={(e) => setCreateForm({ ...createForm, departamento: e.target.value })} placeholder="Opcional" />
                   </div>
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
-                  <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)} className="w-full sm:w-auto">
-                    Cancelar
-                  </Button>
+                  <Button type="button" variant="outline" onClick={() => setIsCreateOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
                   <Button type="submit" disabled={createUser.isPending} className="w-full sm:w-auto">
                     {createUser.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Criar Usuário
@@ -255,6 +207,52 @@ const GerenciamentoUsuarios = () => {
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Edit User Dialog */}
+        <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
+          <DialogContent className="max-w-md mx-4">
+            <form onSubmit={(e) => { e.preventDefault(); if (editingUser) editUser.mutate({ user_id: editingUser.user_id, ...editForm }); }}>
+              <DialogHeader>
+                <DialogTitle>Editar Usuário</DialogTitle>
+                <DialogDescription>Altere os dados do usuário. Deixe a senha em branco para manter a atual.</DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="space-y-2">
+                  <Label>Nome Completo</Label>
+                  <Input value={editForm.nome} onChange={(e) => setEditForm({ ...editForm, nome: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Email</Label>
+                  <Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Nova Senha (opcional)</Label>
+                  <Input type="password" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Deixe em branco para manter" minLength={6} />
+                </div>
+                {editingUser?.role !== "super_admin" && (
+                  <div className="space-y-2">
+                    <Label>Papel</Label>
+                    <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="admin">Administrador (RH)</SelectItem>
+                        <SelectItem value="gestor">Gestor</SelectItem>
+                        <SelectItem value="user">Colaborador</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
+              </div>
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button type="button" variant="outline" onClick={() => setEditingUser(null)} className="w-full sm:w-auto">Cancelar</Button>
+                <Button type="submit" disabled={editUser.isPending} className="w-full sm:w-auto">
+                  {editUser.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Salvar Alterações
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
@@ -281,22 +279,21 @@ const GerenciamentoUsuarios = () => {
                     }
                   />
                   <MobileCardRow label="Criado em" value={new Date(u.created_at).toLocaleDateString("pt-BR")} />
-                  {u.role !== "super_admin" && (
-                    <MobileCardActions>
-                      <Select
-                        value={u.role || ""}
-                        onValueChange={(v) => updateRole.mutate({ userId: u.user_id, newRole: v })}
-                      >
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Alterar papel" />
-                        </SelectTrigger>
+                  <MobileCardActions>
+                    <Button variant="outline" size="sm" onClick={() => openEditDialog(u)} className="flex-1 gap-1">
+                      <Pencil className="h-4 w-4" /> Editar
+                    </Button>
+                    {u.role !== "super_admin" && (
+                      <Select value={u.role || ""} onValueChange={(v) => updateRole.mutate({ userId: u.user_id, newRole: v })}>
+                        <SelectTrigger className="flex-1"><SelectValue placeholder="Papel" /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="admin">Administrador</SelectItem>
-                          <SelectItem value="user">Usuário Comum</SelectItem>
+                          <SelectItem value="admin">RH</SelectItem>
+                          <SelectItem value="gestor">Gestor</SelectItem>
+                          <SelectItem value="user">Colaborador</SelectItem>
                         </SelectContent>
                       </Select>
-                    </MobileCardActions>
-                  )}
+                    )}
+                  </MobileCardActions>
                 </MobileCard>
               ))}
             </MobileCardList>
@@ -325,22 +322,21 @@ const GerenciamentoUsuarios = () => {
                       </TableCell>
                       <TableCell>{new Date(u.created_at).toLocaleDateString("pt-BR")}</TableCell>
                       <TableCell>
-                        {u.role !== "super_admin" ? (
-                          <Select
-                            value={u.role || ""}
-                            onValueChange={(v) => updateRole.mutate({ userId: u.user_id, newRole: v })}
-                          >
-                            <SelectTrigger className="w-40">
-                              <SelectValue placeholder="Alterar papel" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Administrador</SelectItem>
-                              <SelectItem value="user">Usuário Comum</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Protegido</span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          <Button variant="outline" size="sm" onClick={() => openEditDialog(u)} className="gap-1">
+                            <Pencil className="h-3 w-3" /> Editar
+                          </Button>
+                          {u.role !== "super_admin" && (
+                            <Select value={u.role || ""} onValueChange={(v) => updateRole.mutate({ userId: u.user_id, newRole: v })}>
+                              <SelectTrigger className="w-36"><SelectValue placeholder="Papel" /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="admin">RH</SelectItem>
+                                <SelectItem value="gestor">Gestor</SelectItem>
+                                <SelectItem value="user">Colaborador</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

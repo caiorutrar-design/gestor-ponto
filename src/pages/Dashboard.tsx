@@ -13,7 +13,7 @@ import { format } from "date-fns";
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { isAdmin, isSuperAdmin } = useIsAdmin();
+  const { isAdmin, isSuperAdmin, isGestor } = useIsAdmin();
   const { data: colaboradores = [] } = useColaboradores();
   const { data: orgaos = [] } = useOrgaos();
 
@@ -33,14 +33,14 @@ const Dashboard = () => {
       <div className="space-y-8 animate-fade-in">
         <div className="page-header">
           <h1 className="text-2xl font-bold text-foreground md:text-3xl">
-            {isSuperAdmin ? "Painel do Super Administrador" : isAdmin ? "Painel do Administrador" : "Meu Painel"}
+            {isSuperAdmin ? "Painel do Super Administrador" : isAdmin ? "Painel do RH" : isGestor ? "Painel do Gestor" : "Meu Painel"}
           </h1>
           <p className="text-muted-foreground mt-1">
-            {isAdmin ? "Gerencie colaboradores e registros de ponto" : `Bem-vindo, ${user?.email}`}
+            {isAdmin ? "Gerencie colaboradores e registros de ponto" : isGestor ? "Acompanhe os registros da sua equipe" : `Bem-vindo, ${user?.email}`}
           </p>
         </div>
 
-        {isAdmin && (
+        {(isAdmin || isGestor) && (
           <>
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-3">
@@ -154,7 +154,7 @@ const Dashboard = () => {
         )}
 
         {/* Regular user: redirect to registro de ponto */}
-        {!isAdmin && (
+        {!isAdmin && !isGestor && (
           <div className="max-w-lg mx-auto text-center py-12">
             <div className="h-16 w-16 rounded-xl bg-primary/10 flex items-center justify-center mx-auto mb-4">
               <Clock className="h-8 w-8 text-primary" />
