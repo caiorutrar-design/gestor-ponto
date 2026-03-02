@@ -327,6 +327,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_senha_ponto: {
+        Args: { _matricula: string; _senha_ponto: string }
+        Returns: {
+          id: string
+          matricula: string
+          nome_completo: string
+        }[]
+      }
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user" | "gestor"
