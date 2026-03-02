@@ -65,6 +65,7 @@ export type Database = {
           nome_completo: string
           orgao_id: string
           senha_ponto: string | null
+          senha_ponto_hash: string | null
           updated_at: string
         }
         Insert: {
@@ -81,6 +82,7 @@ export type Database = {
           nome_completo: string
           orgao_id: string
           senha_ponto?: string | null
+          senha_ponto_hash?: string | null
           updated_at?: string
         }
         Update: {
@@ -97,6 +99,7 @@ export type Database = {
           nome_completo?: string
           orgao_id?: string
           senha_ponto?: string | null
+          senha_ponto_hash?: string | null
           updated_at?: string
         }
         Relationships: [
