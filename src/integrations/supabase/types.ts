@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      abonos: {
+        Row: {
+          colaborador_id: string
+          concedido_por: string | null
+          created_at: string
+          data_abono: string
+          id: string
+          motivo: string
+        }
+        Insert: {
+          colaborador_id: string
+          concedido_por?: string | null
+          created_at?: string
+          data_abono: string
+          id?: string
+          motivo: string
+        }
+        Update: {
+          colaborador_id?: string
+          concedido_por?: string | null
+          created_at?: string
+          data_abono?: string
+          id?: string
+          motivo?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "abonos_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_logs: {
         Row: {
           action_type: string
@@ -119,6 +154,47 @@ export type Database = {
           },
         ]
       }
+      ferias: {
+        Row: {
+          aprovado_por: string | null
+          colaborador_id: string
+          created_at: string
+          data_fim: string
+          data_inicio: string
+          id: string
+          observacao: string | null
+          tipo: Database["public"]["Enums"]["tipo_ferias"]
+        }
+        Insert: {
+          aprovado_por?: string | null
+          colaborador_id: string
+          created_at?: string
+          data_fim: string
+          data_inicio: string
+          id?: string
+          observacao?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_ferias"]
+        }
+        Update: {
+          aprovado_por?: string | null
+          colaborador_id?: string
+          created_at?: string
+          data_fim?: string
+          data_inicio?: string
+          id?: string
+          observacao?: string | null
+          tipo?: Database["public"]["Enums"]["tipo_ferias"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ferias_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       frequencias_geradas: {
         Row: {
           ano: number
@@ -169,6 +245,50 @@ export type Database = {
             columns: ["orgao_id"]
             isOneToOne: false
             referencedRelation: "orgaos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      justificativas: {
+        Row: {
+          anexo_nome: string | null
+          anexo_url: string | null
+          colaborador_id: string
+          created_at: string
+          data_falta: string
+          descricao: string
+          id: string
+          registrado_por: string | null
+          updated_at: string
+        }
+        Insert: {
+          anexo_nome?: string | null
+          anexo_url?: string | null
+          colaborador_id: string
+          created_at?: string
+          data_falta: string
+          descricao: string
+          id?: string
+          registrado_por?: string | null
+          updated_at?: string
+        }
+        Update: {
+          anexo_nome?: string | null
+          anexo_url?: string | null
+          colaborador_id?: string
+          created_at?: string
+          data_falta?: string
+          descricao?: string
+          id?: string
+          registrado_por?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "justificativas_colaborador_id_fkey"
+            columns: ["colaborador_id"]
+            isOneToOne: false
+            referencedRelation: "colaboradores"
             referencedColumns: ["id"]
           },
         ]
@@ -338,6 +458,7 @@ export type Database = {
     }
     Enums: {
       app_role: "super_admin" | "admin" | "user" | "gestor"
+      tipo_ferias: "ferias_anuais" | "ferias_premio" | "licenca" | "recesso"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -466,6 +587,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["super_admin", "admin", "user", "gestor"],
+      tipo_ferias: ["ferias_anuais", "ferias_premio", "licenca", "recesso"],
     },
   },
 } as const

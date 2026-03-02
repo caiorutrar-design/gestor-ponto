@@ -57,7 +57,8 @@ import {
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
 import { Colaborador, ColaboradorForm } from "@/types/database";
-import { Plus, Pencil, Trash2, Users, Loader2 } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Eye } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
 
 const initialFormData: ColaboradorForm = {
@@ -74,6 +75,7 @@ const initialFormData: ColaboradorForm = {
 };
 
 const ColaboradoresPage = () => {
+  const navigate = useNavigate();
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const { data: orgaos = [] } = useOrgaos();
   const { data: lotacoes = [] } = useLotacoes();
@@ -513,6 +515,14 @@ const ColaboradoresPage = () => {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => navigate(`/dossie/${colaborador.id}`)}
+                                title="Dossiê"
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"

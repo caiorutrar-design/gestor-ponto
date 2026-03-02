@@ -27,6 +27,7 @@ const GerenciarPontosPage = () => {
   const [lotacaoId, setLotacaoId] = useState("all");
   const [dataInicio, setDataInicio] = useState(format(subDays(new Date(), 30), "yyyy-MM-dd"));
   const [dataFim, setDataFim] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [searchUser, setSearchUser] = useState("");
 
   const { data: registros = [], isLoading } = useRegistrosPonto({
     dataInicio,
@@ -55,8 +56,16 @@ const GerenciarPontosPage = () => {
       map.get(key)!.registros.push(r);
     });
 
-    return Array.from(map.values()).sort((a, b) => b.data.localeCompare(a.data));
-  }, [registros]);
+    let result = Array.from(map.values()).sort((a, b) => b.data.localeCompare(a.data));
+    
+    // Filter by user search
+    if (searchUser) {
+      const s = searchUser.toLowerCase();
+      result = result.filter((r) => r.nome.toLowerCase().includes(s) || r.matricula.toLowerCase().includes(s));
+    }
+    
+    return result;
+  }, [registros, searchUser]);
 
   const calcHorasTrabalhadas = (regs: typeof registros) => {
     const sorted = [...regs].sort((a, b) => a.timestamp_registro.localeCompare(b.timestamp_registro));
@@ -113,7 +122,15 @@ const GerenciarPontosPage = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="space-y-2 col-span-2 md:col-span-1">
+                <Label>Buscar Colaborador</Label>
+                <Input
+                  placeholder="Nome ou matrícula..."
+                  value={searchUser}
+                  onChange={(e) => setSearchUser(e.target.value)}
+                />
+              </div>
               <div className="space-y-2">
                 <Label>Data Início</Label>
                 <Input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
