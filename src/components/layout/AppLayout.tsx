@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Building2, MapPin, Menu, X, LogOut,
-  Shield, ShieldCheck, ClipboardList, UserCog, Clock, Timer,
+  Shield, ShieldCheck, ClipboardList, UserCog, Clock, Timer, Briefcase, FolderOpen,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ const navigation: NavItem[] = [
   { name: "Órgãos", href: "/orgaos", icon: Building2, requiredRole: "admin" },
   { name: "Lotações", href: "/lotacoes", icon: MapPin, requiredRole: "admin" },
   { name: "Registros de Ponto", href: "/gerenciar-pontos", icon: Timer, requiredRole: "gestor" },
+  { name: "Gestão de RH", href: "/gestao-rh", icon: Briefcase, requiredRole: "gestor" },
   { name: "Logs de Auditoria", href: "/logs-auditoria", icon: ClipboardList, requiredRole: "admin" },
   { name: "Gerenciar Usuários", href: "/gerenciar-usuarios", icon: UserCog, requiredRole: "super_admin" },
 ];

@@ -15,6 +15,8 @@ import RegistroPonto from "./pages/RegistroPonto";
 import GerenciarPontos from "./pages/GerenciarPontos";
 import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
 import LogsAuditoria from "./pages/LogsAuditoria";
+import GestaoRH from "./pages/GestaoRH";
+import DossieColaborador from "./pages/DossieColaborador";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import NotFound from "./pages/NotFound";
@@ -39,6 +41,8 @@ const App = () => (
             <Route path="/lotacoes" element={<AdminOrSuperRoute><Lotacoes /></AdminOrSuperRoute>} />
             <Route path="/gerenciar-pontos" element={<ProtectedRoute><GerenciarPontos /></ProtectedRoute>} />
             <Route path="/logs-auditoria" element={<AdminOrSuperRoute><LogsAuditoria /></AdminOrSuperRoute>} />
+            <Route path="/gestao-rh" element={<ProtectedRoute><GestaoRH /></ProtectedRoute>} />
+            <Route path="/dossie/:id" element={<ProtectedRoute><DossieColaborador /></ProtectedRoute>} />
             {/* Super Admin only */}
             <Route path="/gerenciar-usuarios" element={<SuperAdminRoute><GerenciamentoUsuarios /></SuperAdminRoute>} />
             <Route path="*" element={<NotFound />} />
