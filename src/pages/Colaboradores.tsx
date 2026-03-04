@@ -91,6 +91,40 @@ const ColaboradoresPage = () => {
   const [editingColaborador, setEditingColaborador] = useState<Colaborador | null>(null);
   const [formData, setFormData] = useState<ColaboradorForm>(initialFormData);
   const [searchTerm, setSearchTerm] = useState("");
+  const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
+  const [credentialsColab, setCredentialsColab] = useState<Colaborador | null>(null);
+  const [credentialsPassword, setCredentialsPassword] = useState("");
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsResult, setCredentialsResult] = useState<{ login: string; password: string } | null>(null);
+
+  const handleGenerateCredentials = (colaborador: Colaborador) => {
+    setCredentialsColab(colaborador);
+    const randomPwd = Math.random().toString(36).slice(-8) + "A1";
+    setCredentialsPassword(randomPwd);
+    setCredentialsResult(null);
+    setCredentialsDialogOpen(true);
+  };
+
+  const handleSubmitCredentials = async () => {
+    if (!credentialsColab || !credentialsPassword) return;
+    setCredentialsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-colaborador-account", {
+        body: { colaborador_id: credentialsColab.id, password: credentialsPassword },
+      });
+      if (error) throw error;
+      if (data.error) {
+        toast.error(data.error);
+      } else {
+        setCredentialsResult({ login: data.login, password: credentialsPassword });
+        toast.success(data.message);
+      }
+    } catch {
+      toast.error("Erro ao gerar credenciais.");
+    } finally {
+      setCredentialsLoading(false);
+    }
+  };
 
   // Filter colaboradores based on search term
   const filteredColaboradores = colaboradores.filter((colaborador) => {

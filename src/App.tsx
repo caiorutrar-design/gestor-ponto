@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminOrSuperRoute } from "@/components/AdminOrSuperRoute";
 import { SuperAdminRoute } from "@/components/SuperAdminRoute";
+import { ColaboradorRoute } from "@/components/ColaboradorRoute";
 import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
@@ -17,6 +18,7 @@ import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
 import LogsAuditoria from "./pages/LogsAuditoria";
 import GestaoRH from "./pages/GestaoRH";
 import DossieColaborador from "./pages/DossieColaborador";
+import MeuPonto from "./pages/MeuPonto";
 import Login from "./pages/Login";
 import Cadastro from "./pages/Cadastro";
 import NotFound from "./pages/NotFound";
@@ -33,6 +35,7 @@ const App = () => (
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/cadastro" element={<Cadastro />} />
+            <Route path="/meu-ponto" element={<ColaboradorRoute><MeuPonto /></ColaboradorRoute>} />
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
             <Route path="/registro-ponto" element={<ProtectedRoute><RegistroPonto /></ProtectedRoute>} />
             {/* Admin + Super Admin routes */}

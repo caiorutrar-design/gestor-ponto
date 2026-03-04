@@ -5,10 +5,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import { Loader2, FileText } from "lucide-react";
 
 const LoginPage = () => {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn } = useAuth();
@@ -19,20 +20,53 @@ const LoginPage = () => {
     e.preventDefault();
     setLoading(true);
 
+    // If identifier doesn't contain @, treat as matrícula
+    const email = identifier.includes("@") ? identifier : `${identifier}@ponto.interno`;
+
     const { error } = await signIn(email, password);
 
     if (error) {
       toast({
         title: "Erro ao entrar",
-        description: error.message === "Invalid login credentials" 
-          ? "Email ou senha incorretos" 
+        description: error.message === "Invalid login credentials"
+          ? "Credenciais incorretas"
           : error.message,
         variant: "destructive",
       });
-    } else {
-      navigate("/");
+      setLoading(false);
+      return;
     }
 
+    // Check user role to redirect
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (roleData?.role === "user") {
+          // Check if linked to a colaborador
+          const { data: colab } = await supabase
+            .from("colaboradores")
+            .select("id")
+            .eq("user_id", user.id)
+            .maybeSingle();
+
+          if (colab) {
+            navigate("/meu-ponto");
+            setLoading(false);
+            return;
+          }
+        }
+      }
+    } catch {
+      // Fallback to default redirect
+    }
+
+    navigate("/");
     setLoading(false);
   };
 
@@ -50,13 +84,13 @@ const LoginPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="identifier">Email ou Matrícula</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="seu@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                id="identifier"
+                type="text"
+                placeholder="seu@email.com ou matrícula"
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
                 required
                 disabled={loading}
               />
