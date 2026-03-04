@@ -614,6 +614,82 @@ const ColaboradoresPage = () => {
             )}
           </div>
         )}
+
+        {/* Credentials Dialog */}
+        <Dialog open={credentialsDialogOpen} onOpenChange={setCredentialsDialogOpen}>
+          <DialogContent className="max-w-sm mx-4">
+            <DialogHeader>
+              <DialogTitle>
+                {credentialsResult ? "Credenciais Geradas" : "Gerar Credenciais de Acesso"}
+              </DialogTitle>
+              <DialogDescription>
+                {credentialsColab?.nome_completo} — {credentialsColab?.matricula}
+              </DialogDescription>
+            </DialogHeader>
+
+            {credentialsResult ? (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Login (matrícula)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={credentialsResult.login} readOnly className="font-mono" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(credentialsResult.login);
+                        toast.success("Copiado!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Senha temporária</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={credentialsResult.password} readOnly className="font-mono" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(credentialsResult.password);
+                        toast.success("Copiado!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Anote a senha — ela não será exibida novamente.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Senha de acesso</Label>
+                  <Input
+                    value={credentialsPassword}
+                    onChange={(e) => setCredentialsPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleSubmitCredentials}
+                    disabled={credentialsLoading || credentialsPassword.length < 6}
+                    className="w-full"
+                  >
+                    {credentialsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {(credentialsColab as any)?.user_id ? "Resetar Senha" : "Criar Conta"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
