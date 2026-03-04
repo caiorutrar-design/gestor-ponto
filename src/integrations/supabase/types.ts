@@ -102,6 +102,7 @@ export type Database = {
           senha_ponto: string | null
           senha_ponto_hash: string | null
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           ativo?: boolean
@@ -119,6 +120,7 @@ export type Database = {
           senha_ponto?: string | null
           senha_ponto_hash?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           ativo?: boolean
@@ -136,6 +138,7 @@ export type Database = {
           senha_ponto?: string | null
           senha_ponto_hash?: string | null
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {

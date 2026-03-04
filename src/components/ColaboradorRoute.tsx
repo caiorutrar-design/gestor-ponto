@@ -3,11 +3,11 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useUserRole";
 import { Loader2 } from "lucide-react";
 
-interface ProtectedRouteProps {
+interface ColaboradorRouteProps {
   children: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ColaboradorRoute({ children }: ColaboradorRouteProps) {
   const { user, loading } = useAuth();
   const { isAdmin, isSuperAdmin, isGestor, isLoading: roleLoading, role } = useIsAdmin();
 
@@ -23,9 +23,9 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  // If user is a 'user' role (colaborador), redirect to /meu-ponto
-  if (role === "user" && !isAdmin && !isSuperAdmin && !isGestor) {
-    return <Navigate to="/meu-ponto" replace />;
+  // Only 'user' role (colaboradores) can access this
+  if (isAdmin || isSuperAdmin || isGestor) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;

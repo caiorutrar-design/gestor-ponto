@@ -27,6 +27,7 @@ export interface Colaborador {
   jornada_entrada_tarde: string;
   jornada_saida_tarde: string;
   ativo: boolean;
+  user_id: string | null;
   created_at: string;
   updated_at: string;
   orgao?: Orgao;

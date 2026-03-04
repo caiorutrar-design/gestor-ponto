@@ -57,9 +57,12 @@ import {
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
 import { Colaborador, ColaboradorForm } from "@/types/database";
-import { Plus, Pencil, Trash2, Users, Loader2, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
+import { supabase } from "@/integrations/supabase/client";
+import { Colaborador as ColabType } from "@/types/database";
+import { toast } from "sonner";
 
 const initialFormData: ColaboradorForm = {
   nome_completo: "",
@@ -88,6 +91,40 @@ const ColaboradoresPage = () => {
   const [editingColaborador, setEditingColaborador] = useState<Colaborador | null>(null);
   const [formData, setFormData] = useState<ColaboradorForm>(initialFormData);
   const [searchTerm, setSearchTerm] = useState("");
+  const [credentialsDialogOpen, setCredentialsDialogOpen] = useState(false);
+  const [credentialsColab, setCredentialsColab] = useState<Colaborador | null>(null);
+  const [credentialsPassword, setCredentialsPassword] = useState("");
+  const [credentialsLoading, setCredentialsLoading] = useState(false);
+  const [credentialsResult, setCredentialsResult] = useState<{ login: string; password: string } | null>(null);
+
+  const handleGenerateCredentials = (colaborador: Colaborador) => {
+    setCredentialsColab(colaborador);
+    const randomPwd = Math.random().toString(36).slice(-8) + "A1";
+    setCredentialsPassword(randomPwd);
+    setCredentialsResult(null);
+    setCredentialsDialogOpen(true);
+  };
+
+  const handleSubmitCredentials = async () => {
+    if (!credentialsColab || !credentialsPassword) return;
+    setCredentialsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-colaborador-account", {
+        body: { colaborador_id: credentialsColab.id, password: credentialsPassword },
+      });
+      if (error) throw error;
+      if (data.error) {
+        toast.error(data.error);
+      } else {
+        setCredentialsResult({ login: data.login, password: credentialsPassword });
+        toast.success(data.message);
+      }
+    } catch {
+      toast.error("Erro ao gerar credenciais.");
+    } finally {
+      setCredentialsLoading(false);
+    }
+  };
 
   // Filter colaboradores based on search term
   const filteredColaboradores = colaboradores.filter((colaborador) => {
@@ -526,6 +563,14 @@ const ColaboradoresPage = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() => handleGenerateCredentials(colaborador)}
+                                title="Gerar Credenciais"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => handleOpenDialog(colaborador)}
                               >
                                 <Pencil className="h-4 w-4" />
@@ -569,6 +614,82 @@ const ColaboradoresPage = () => {
             )}
           </div>
         )}
+
+        {/* Credentials Dialog */}
+        <Dialog open={credentialsDialogOpen} onOpenChange={setCredentialsDialogOpen}>
+          <DialogContent className="max-w-sm mx-4">
+            <DialogHeader>
+              <DialogTitle>
+                {credentialsResult ? "Credenciais Geradas" : "Gerar Credenciais de Acesso"}
+              </DialogTitle>
+              <DialogDescription>
+                {credentialsColab?.nome_completo} — {credentialsColab?.matricula}
+              </DialogDescription>
+            </DialogHeader>
+
+            {credentialsResult ? (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Login (matrícula)</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={credentialsResult.login} readOnly className="font-mono" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(credentialsResult.login);
+                        toast.success("Copiado!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-xs text-muted-foreground">Senha temporária</Label>
+                  <div className="flex items-center gap-2">
+                    <Input value={credentialsResult.password} readOnly className="font-mono" />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        navigator.clipboard.writeText(credentialsResult.password);
+                        toast.success("Copiado!");
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Anote a senha — ela não será exibida novamente.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4 py-2">
+                <div className="space-y-2">
+                  <Label>Senha de acesso</Label>
+                  <Input
+                    value={credentialsPassword}
+                    onChange={(e) => setCredentialsPassword(e.target.value)}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button
+                    onClick={handleSubmitCredentials}
+                    disabled={credentialsLoading || credentialsPassword.length < 6}
+                    className="w-full"
+                  >
+                    {credentialsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {(credentialsColab as any)?.user_id ? "Resetar Senha" : "Criar Conta"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </AppLayout>
   );
