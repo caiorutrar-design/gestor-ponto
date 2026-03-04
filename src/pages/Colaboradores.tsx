@@ -57,9 +57,12 @@ import {
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
 import { Colaborador, ColaboradorForm } from "@/types/database";
-import { Plus, Pencil, Trash2, Users, Loader2, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
+import { supabase } from "@/integrations/supabase/client";
+import { Colaborador as ColabType } from "@/types/database";
+import { toast } from "sonner";
 
 const initialFormData: ColaboradorForm = {
   nome_completo: "",
