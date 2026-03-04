@@ -563,6 +563,14 @@ const ColaboradoresPage = () => {
                               <Button
                                 variant="ghost"
                                 size="icon"
+                                onClick={() => handleGenerateCredentials(colaborador)}
+                                title="Gerar Credenciais"
+                              >
+                                <KeyRound className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
                                 onClick={() => handleOpenDialog(colaborador)}
                               >
                                 <Pencil className="h-4 w-4" />
