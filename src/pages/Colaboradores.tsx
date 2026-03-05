@@ -57,12 +57,34 @@ import {
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
 import { Colaborador, ColaboradorForm } from "@/types/database";
-import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy, RefreshCw, ShieldCheck, ShieldX } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
 import { supabase } from "@/integrations/supabase/client";
 import { Colaborador as ColabType } from "@/types/database";
 import { toast } from "sonner";
+
+function generateSecurePassword(length = 12): string {
+  const lower = 'abcdefghijklmnopqrstuvwxyz';
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const digits = '0123456789';
+  const symbols = '!@#$%&*';
+  const charset = lower + upper + digits + symbols;
+  const array = new Uint32Array(length);
+  crypto.getRandomValues(array);
+  const chars = Array.from(array, (v) => charset[v % charset.length]);
+  // Guarantee at least one of each type
+  const groups = [upper, lower, digits, symbols];
+  const posArray = new Uint32Array(groups.length);
+  crypto.getRandomValues(posArray);
+  groups.forEach((group, i) => {
+    const pos = posArray[i] % length;
+    const charIdx = array[pos] % group.length;
+    chars[pos] = group[charIdx];
+  });
+  return chars.join('');
+}
 
 const initialFormData: ColaboradorForm = {
   nome_completo: "",
@@ -97,9 +119,11 @@ const ColaboradoresPage = () => {
   const [credentialsLoading, setCredentialsLoading] = useState(false);
   const [credentialsResult, setCredentialsResult] = useState<{ login: string; password: string } | null>(null);
 
+  const [autoCreateAccount, setAutoCreateAccount] = useState(true);
+
   const handleGenerateCredentials = (colaborador: Colaborador) => {
     setCredentialsColab(colaborador);
-    const randomPwd = Math.random().toString(36).slice(-8) + "A1";
+    const randomPwd = generateSecurePassword();
     setCredentialsPassword(randomPwd);
     setCredentialsResult(null);
     setCredentialsDialogOpen(true);
@@ -169,7 +193,27 @@ const ColaboradoresPage = () => {
     if (editingColaborador) {
       await updateColaborador.mutateAsync({ id: editingColaborador.id, ...formData });
     } else {
-      await createColaborador.mutateAsync(formData);
+      const created = await createColaborador.mutateAsync(formData);
+      // Auto-create auth account if checkbox is checked
+      if (autoCreateAccount && created?.id) {
+        const pwd = generateSecurePassword();
+        try {
+          const { data, error } = await supabase.functions.invoke("create-colaborador-account", {
+            body: { colaborador_id: created.id, password: pwd },
+          });
+          if (!error && !data.error) {
+            setIsDialogOpen(false);
+            resetForm();
+            setCredentialsColab(created as Colaborador);
+            setCredentialsPassword(pwd);
+            setCredentialsResult({ login: data.login, password: pwd });
+            setCredentialsDialogOpen(true);
+            return;
+          }
+        } catch {
+          toast.error("Colaborador criado, mas erro ao gerar conta. Use o botão de credenciais.");
+        }
+      }
     }
     
     setIsDialogOpen(false);
@@ -381,6 +425,24 @@ const ColaboradoresPage = () => {
                     />
                     <Label htmlFor="ativo">Colaborador Ativo</Label>
                   </div>
+
+                  {!editingColaborador && (
+                    <div className="flex items-center space-x-2 rounded-md border p-3 bg-muted/50">
+                      <Checkbox
+                        id="auto_create_account"
+                        checked={autoCreateAccount}
+                        onCheckedChange={(checked) => setAutoCreateAccount(checked === true)}
+                      />
+                      <div className="space-y-0.5">
+                        <Label htmlFor="auto_create_account" className="text-sm font-medium cursor-pointer">
+                          Criar conta de acesso automaticamente
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Gera login e senha para o colaborador acessar o sistema
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
@@ -479,6 +541,28 @@ const ColaboradoresPage = () => {
                         )}
                       </div>
                       <MobileCardActions>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => navigate(`/dossie/${colaborador.id}`)}
+                          className="flex-1 gap-1"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Dossiê
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerateCredentials(colaborador)}
+                          className="flex-1 gap-1"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          {(colaborador as any).user_id ? (
+                            <ShieldCheck className="h-3 w-3 text-primary" />
+                          ) : (
+                            <ShieldX className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </Button>
                         <Button
                           variant="outline"
                           size="sm"
@@ -669,17 +753,28 @@ const ColaboradoresPage = () => {
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label>Senha de acesso</Label>
-                  <Input
-                    value={credentialsPassword}
-                    onChange={(e) => setCredentialsPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={credentialsPassword}
+                      onChange={(e) => setCredentialsPassword(e.target.value)}
+                      placeholder="Mínimo 8 caracteres"
+                      minLength={8}
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCredentialsPassword(generateSecurePassword())}
+                      title="Gerar nova senha"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button
                     onClick={handleSubmitCredentials}
-                    disabled={credentialsLoading || credentialsPassword.length < 6}
+                    disabled={credentialsLoading || credentialsPassword.length < 8}
                     className="w-full"
                   >
                     {credentialsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
