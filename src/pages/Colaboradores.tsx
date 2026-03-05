@@ -193,7 +193,27 @@ const ColaboradoresPage = () => {
     if (editingColaborador) {
       await updateColaborador.mutateAsync({ id: editingColaborador.id, ...formData });
     } else {
-      await createColaborador.mutateAsync(formData);
+      const created = await createColaborador.mutateAsync(formData);
+      // Auto-create auth account if checkbox is checked
+      if (autoCreateAccount && created?.id) {
+        const pwd = generateSecurePassword();
+        try {
+          const { data, error } = await supabase.functions.invoke("create-colaborador-account", {
+            body: { colaborador_id: created.id, password: pwd },
+          });
+          if (!error && !data.error) {
+            setIsDialogOpen(false);
+            resetForm();
+            setCredentialsColab(created as Colaborador);
+            setCredentialsPassword(pwd);
+            setCredentialsResult({ login: data.login, password: pwd });
+            setCredentialsDialogOpen(true);
+            return;
+          }
+        } catch {
+          toast.error("Colaborador criado, mas erro ao gerar conta. Use o botão de credenciais.");
+        }
+      }
     }
     
     setIsDialogOpen(false);
