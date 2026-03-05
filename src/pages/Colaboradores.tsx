@@ -65,6 +65,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Colaborador as ColabType } from "@/types/database";
 import { toast } from "sonner";
 
+function generateSecurePassword(length = 12): string {
+  const lower = 'abcdefghijklmnopqrstuvwxyz';
+  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const digits = '0123456789';
+  const symbols = '!@#$%&*';
+  const charset = lower + upper + digits + symbols;
+  const array = new Uint32Array(length);
+  crypto.getRandomValues(array);
+  const chars = Array.from(array, (v) => charset[v % charset.length]);
+  // Guarantee at least one of each type
+  const groups = [upper, lower, digits, symbols];
+  const posArray = new Uint32Array(groups.length);
+  crypto.getRandomValues(posArray);
+  groups.forEach((group, i) => {
+    const pos = posArray[i] % length;
+    const charIdx = array[pos] % group.length;
+    chars[pos] = group[charIdx];
+  });
+  return chars.join('');
+}
+
 const initialFormData: ColaboradorForm = {
   nome_completo: "",
   matricula: "",
