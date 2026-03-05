@@ -544,6 +544,28 @@ const ColaboradoresPage = () => {
                         <Button
                           variant="outline"
                           size="sm"
+                          onClick={() => navigate(`/dossie/${colaborador.id}`)}
+                          className="flex-1 gap-1"
+                        >
+                          <Eye className="h-4 w-4" />
+                          Dossiê
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleGenerateCredentials(colaborador)}
+                          className="flex-1 gap-1"
+                        >
+                          <KeyRound className="h-4 w-4" />
+                          {(colaborador as any).user_id ? (
+                            <ShieldCheck className="h-3 w-3 text-green-600" />
+                          ) : (
+                            <ShieldX className="h-3 w-3 text-muted-foreground" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
                           onClick={() => handleOpenDialog(colaborador)}
                           className="flex-1 gap-1"
                         >
