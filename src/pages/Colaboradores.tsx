@@ -119,9 +119,11 @@ const ColaboradoresPage = () => {
   const [credentialsLoading, setCredentialsLoading] = useState(false);
   const [credentialsResult, setCredentialsResult] = useState<{ login: string; password: string } | null>(null);
 
+  const [autoCreateAccount, setAutoCreateAccount] = useState(true);
+
   const handleGenerateCredentials = (colaborador: Colaborador) => {
     setCredentialsColab(colaborador);
-    const randomPwd = Math.random().toString(36).slice(-8) + "A1";
+    const randomPwd = generateSecurePassword();
     setCredentialsPassword(randomPwd);
     setCredentialsResult(null);
     setCredentialsDialogOpen(true);
