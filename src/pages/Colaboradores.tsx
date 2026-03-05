@@ -425,6 +425,24 @@ const ColaboradoresPage = () => {
                     />
                     <Label htmlFor="ativo">Colaborador Ativo</Label>
                   </div>
+
+                  {!editingColaborador && (
+                    <div className="flex items-center space-x-2 rounded-md border p-3 bg-muted/50">
+                      <Checkbox
+                        id="auto_create_account"
+                        checked={autoCreateAccount}
+                        onCheckedChange={(checked) => setAutoCreateAccount(checked === true)}
+                      />
+                      <div className="space-y-0.5">
+                        <Label htmlFor="auto_create_account" className="text-sm font-medium cursor-pointer">
+                          Criar conta de acesso automaticamente
+                        </Label>
+                        <p className="text-xs text-muted-foreground">
+                          Gera login e senha para o colaborador acessar o sistema
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <DialogFooter className="flex-col sm:flex-row gap-2">
                   <Button
