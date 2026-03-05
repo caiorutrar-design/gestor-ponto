@@ -753,17 +753,28 @@ const ColaboradoresPage = () => {
               <div className="space-y-4 py-2">
                 <div className="space-y-2">
                   <Label>Senha de acesso</Label>
-                  <Input
-                    value={credentialsPassword}
-                    onChange={(e) => setCredentialsPassword(e.target.value)}
-                    placeholder="Mínimo 6 caracteres"
-                    minLength={6}
-                  />
+                  <div className="flex items-center gap-2">
+                    <Input
+                      value={credentialsPassword}
+                      onChange={(e) => setCredentialsPassword(e.target.value)}
+                      placeholder="Mínimo 8 caracteres"
+                      minLength={8}
+                      className="font-mono"
+                    />
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => setCredentialsPassword(generateSecurePassword())}
+                      title="Gerar nova senha"
+                    >
+                      <RefreshCw className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
                 <DialogFooter>
                   <Button
                     onClick={handleSubmitCredentials}
-                    disabled={credentialsLoading || credentialsPassword.length < 6}
+                    disabled={credentialsLoading || credentialsPassword.length < 8}
                     className="w-full"
                   >
                     {credentialsLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
