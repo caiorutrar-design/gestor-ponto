@@ -75,7 +75,7 @@ Deno.serve(async (req) => {
 
     const colab = colaborador[0];
 
-    // Check today's records count
+    // Check today's records count - flexible limit (safety net against abuse)
     const today = new Date().toISOString().split("T")[0];
     const { data: todayRecords, error: recordsError } = await supabaseAdmin
       .from("registros_ponto")
@@ -86,9 +86,9 @@ Deno.serve(async (req) => {
 
     if (recordsError) throw recordsError;
 
-    if (todayRecords && todayRecords.length >= 4) {
+    if (todayRecords && todayRecords.length >= 20) {
       return new Response(
-        JSON.stringify({ error: "Limite de 4 registros por dia atingido." }),
+        JSON.stringify({ error: "Limite de registros por dia atingido." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -130,6 +130,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    console.error("[registrar-ponto] Error:", error);
     return new Response(
       JSON.stringify({ error: "Erro interno ao registrar ponto." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }

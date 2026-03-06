@@ -13,12 +13,12 @@ import { toast } from "sonner";
 import {
   Clock, LogOut, LogIn, ArrowRightFromLine, Loader2, CalendarDays, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { format, startOfMonth, endOfMonth, subMonths, addMonths, parseISO, differenceInMinutes, isSameDay } from "date-fns";
+import { format, startOfMonth, endOfMonth, subMonths, addMonths, parseISO, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 const MeuPontoPage = () => {
   const navigate = useNavigate();
-  const { signOut, user } = useAuth();
+  const { signOut } = useAuth();
   const queryClient = useQueryClient();
   const { data: colaborador, isLoading: colabLoading } = useMyColaborador();
 
@@ -68,32 +68,32 @@ const MeuPontoPage = () => {
   const nextTipo = !lastRecord || lastRecord.tipo === "saida" ? "entrada" : "saida";
   const isEntrada = nextTipo === "entrada";
 
-  // Calculate today's worked hours
+  // Calculate today's worked hours dynamically (no fixed target)
   const todayWorkedMinutes = useMemo(() => {
     let total = 0;
-    for (let i = 0; i < todaySorted.length - 1; i += 2) {
-      if (todaySorted[i].tipo === "entrada" && todaySorted[i + 1]?.tipo === "saida") {
-        total += differenceInMinutes(
-          parseISO(todaySorted[i + 1].timestamp_registro),
-          parseISO(todaySorted[i].timestamp_registro)
-        );
+    for (let i = 0; i < todaySorted.length; i++) {
+      if (todaySorted[i].tipo === "entrada") {
+        const exitRecord = todaySorted[i + 1];
+        if (exitRecord && exitRecord.tipo === "saida") {
+          total += differenceInMinutes(
+            parseISO(exitRecord.timestamp_registro),
+            parseISO(todaySorted[i].timestamp_registro)
+          );
+          i++; // skip the exit record
+        } else if (!exitRecord) {
+          // Currently working - count from entry to now
+          total += differenceInMinutes(new Date(), parseISO(todaySorted[i].timestamp_registro));
+        }
       }
     }
     return total;
-  }, [todaySorted]);
+  }, [todaySorted, currentTime]);
 
-  // Expected 8h = 480min
-  const expectedMinutes = 480;
-  const hoursBalance = todayWorkedMinutes - expectedMinutes;
   const workedH = Math.floor(todayWorkedMinutes / 60);
   const workedM = todayWorkedMinutes % 60;
 
   const handleRegistrar = async () => {
     if (!colaborador) return;
-    if (todaySorted.length >= 4) {
-      toast.error("Limite de 4 registros por dia atingido.");
-      return;
-    }
 
     setIsSubmitting(true);
     try {
@@ -145,7 +145,7 @@ const MeuPontoPage = () => {
     );
   }
 
-  const last4 = recentRecords.slice(0, 4);
+  const last6 = recentRecords.slice(0, 6);
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,7 +180,7 @@ const MeuPontoPage = () => {
         <Button
           size="lg"
           onClick={handleRegistrar}
-          disabled={isSubmitting || todaySorted.length >= 4}
+          disabled={isSubmitting}
           className={`w-full h-16 text-lg font-semibold gap-3 ${
             isEntrada
               ? "bg-green-600 hover:bg-green-700 text-white"
@@ -196,40 +196,24 @@ const MeuPontoPage = () => {
           )}
           {isSubmitting
             ? "Registrando..."
-            : todaySorted.length >= 4
-            ? "Limite atingido"
             : isEntrada
             ? "Registrar Entrada"
             : "Registrar Saída"}
         </Button>
 
-        {/* Hours Balance */}
+        {/* Hours Worked Today */}
         {todaySorted.length > 0 && (
           <Card>
             <CardContent className="py-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Horas hoje</span>
-                <span className="font-mono font-semibold text-foreground">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">Horas trabalhadas hoje</span>
+                <span className="font-mono font-semibold text-foreground text-lg">
                   {workedH}h{workedM.toString().padStart(2, "0")}m
                 </span>
               </div>
-              <div className="w-full bg-muted rounded-full h-3 overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all ${
-                    todayWorkedMinutes >= expectedMinutes ? "bg-green-500" : "bg-primary"
-                  }`}
-                  style={{ width: `${Math.min((todayWorkedMinutes / expectedMinutes) * 100, 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between mt-1">
-                <span className="text-xs text-muted-foreground">0h</span>
-                <span className="text-xs text-muted-foreground">8h</span>
-              </div>
-              {todayWorkedMinutes > 0 && (
-                <p className={`text-xs mt-1 text-center ${hoursBalance >= 0 ? "text-green-600" : "text-orange-600"}`}>
-                  {hoursBalance >= 0
-                    ? `+${Math.floor(hoursBalance / 60)}h${(hoursBalance % 60).toString().padStart(2, "0")}m extras`
-                    : `${Math.floor(Math.abs(hoursBalance) / 60)}h${(Math.abs(hoursBalance) % 60).toString().padStart(2, "0")}m restantes`}
+              {!isEntrada && (
+                <p className="text-xs text-muted-foreground mt-1 text-center">
+                  ⏱ Contagem em andamento...
                 </p>
               )}
             </CardContent>
@@ -271,11 +255,11 @@ const MeuPontoPage = () => {
             </Button>
           </CardHeader>
           <CardContent>
-            {last4.length === 0 ? (
+            {last6.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">Nenhum registro encontrado.</p>
             ) : (
               <div className="space-y-2">
-                {last4.map((r) => (
+                {last6.map((r) => (
                   <div key={r.id} className="flex items-center justify-between py-1.5 border-b last:border-0">
                     <div className="flex items-center gap-2">
                       <Badge

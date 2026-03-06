@@ -14,6 +14,7 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
+      console.error("[create-colaborador-account] No Authorization header");
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -28,11 +29,14 @@ Deno.serve(async (req) => {
 
     const { data: { user: callingUser }, error: authError } = await supabaseClient.auth.getUser();
     if (authError || !callingUser) {
+      console.error("[create-colaborador-account] Auth error:", authError?.message);
       return new Response(JSON.stringify({ error: "Não autorizado" }), {
         status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    console.log("[create-colaborador-account] Caller:", callingUser.email, callingUser.id);
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -48,6 +52,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (!roleData) {
+      console.error("[create-colaborador-account] Caller has no admin/super_admin role");
       return new Response(JSON.stringify({ error: "Acesso negado." }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -78,20 +83,25 @@ Deno.serve(async (req) => {
       .single();
 
     if (colabError || !colaborador) {
+      console.error("[create-colaborador-account] Colaborador not found:", colabError?.message);
       return new Response(JSON.stringify({ error: "Colaborador não encontrado." }), {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    console.log("[create-colaborador-account] Colaborador:", colaborador.matricula, colaborador.nome_completo, "existing user_id:", colaborador.user_id);
+
     // If already has account, just reset password
     if (colaborador.user_id) {
+      console.log("[create-colaborador-account] Resetting password for existing user:", colaborador.user_id);
       const { error: updateError } = await supabaseAdmin.auth.admin.updateUserById(
         colaborador.user_id,
         { password }
       );
 
       if (updateError) {
+        console.error("[create-colaborador-account] Password reset error:", updateError.message);
         return new Response(JSON.stringify({ error: "Erro ao atualizar senha: " + updateError.message }), {
           status: 400,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -108,6 +118,7 @@ Deno.serve(async (req) => {
         details: { matricula: colaborador.matricula, nome: colaborador.nome_completo },
       });
 
+      console.log("[create-colaborador-account] Password reset successful");
       return new Response(
         JSON.stringify({
           success: true,
@@ -121,6 +132,7 @@ Deno.serve(async (req) => {
 
     // Create new auth account using matricula as email
     const email = `${colaborador.matricula}@ponto.interno`;
+    console.log("[create-colaborador-account] Creating auth user with email:", email);
 
     const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
@@ -130,6 +142,7 @@ Deno.serve(async (req) => {
     });
 
     if (createError) {
+      console.error("[create-colaborador-account] Auth user creation error:", createError.message);
       return new Response(JSON.stringify({ error: "Erro ao criar conta: " + createError.message }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -137,21 +150,39 @@ Deno.serve(async (req) => {
     }
 
     const userId = newUser.user!.id;
+    console.log("[create-colaborador-account] Auth user created:", userId);
 
     // Update profile
-    await supabaseAdmin
+    const { error: profileError } = await supabaseAdmin
       .from("profiles")
       .update({ nome_completo: colaborador.nome_completo, email })
       .eq("user_id", userId);
+    
+    if (profileError) {
+      console.error("[create-colaborador-account] Profile update error:", profileError.message);
+    } else {
+      console.log("[create-colaborador-account] Profile updated");
+    }
 
     // Set role as 'user'
-    await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "user" });
+    const { error: roleError } = await supabaseAdmin.from("user_roles").insert({ user_id: userId, role: "user" });
+    if (roleError) {
+      console.error("[create-colaborador-account] Role insert error:", roleError.message);
+    } else {
+      console.log("[create-colaborador-account] Role 'user' assigned");
+    }
 
     // Link colaborador to auth user
-    await supabaseAdmin
+    const { error: linkError } = await supabaseAdmin
       .from("colaboradores")
       .update({ user_id: userId })
       .eq("id", colaborador_id);
+    
+    if (linkError) {
+      console.error("[create-colaborador-account] Colaborador link error:", linkError.message);
+    } else {
+      console.log("[create-colaborador-account] Colaborador linked to auth user");
+    }
 
     // Audit log
     await supabaseAdmin.from("audit_logs").insert({
@@ -163,6 +194,8 @@ Deno.serve(async (req) => {
       details: { matricula: colaborador.matricula, nome: colaborador.nome_completo, auth_user_id: userId },
     });
 
+    console.log("[create-colaborador-account] Account creation complete for", colaborador.matricula);
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -173,6 +206,7 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error) {
+    console.error("[create-colaborador-account] Unexpected error:", error);
     return new Response(JSON.stringify({ error: "Erro interno do servidor." }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },

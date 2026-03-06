@@ -26,10 +26,13 @@ const LoginPage = () => {
     const { error } = await signIn(email, password);
 
     if (error) {
+      const isMatricula = !identifier.includes("@");
       toast({
         title: "Erro ao entrar",
         description: error.message === "Invalid login credentials"
-          ? "Credenciais incorretas"
+          ? isMatricula
+            ? "Matrícula ou senha incorreta. Verifique se sua conta foi criada pelo administrador."
+            : "Email ou senha incorretos."
           : error.message,
         variant: "destructive",
       });
