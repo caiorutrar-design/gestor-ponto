@@ -432,20 +432,50 @@ const ColaboradoresPage = () => {
                   </div>
 
                   {!editingColaborador && (
-                    <div className="flex items-center space-x-2 rounded-md border p-3 bg-muted/50">
-                      <Checkbox
-                        id="auto_create_account"
-                        checked={autoCreateAccount}
-                        onCheckedChange={(checked) => setAutoCreateAccount(checked === true)}
-                      />
-                      <div className="space-y-0.5">
-                        <Label htmlFor="auto_create_account" className="text-sm font-medium cursor-pointer">
-                          Criar conta de acesso automaticamente
-                        </Label>
-                        <p className="text-xs text-muted-foreground">
-                          Gera login e senha para o colaborador acessar o sistema
-                        </p>
+                    <div className="space-y-3 rounded-md border p-3 bg-muted/50">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="auto_create_account"
+                          checked={autoCreateAccount}
+                          onCheckedChange={(checked) => setAutoCreateAccount(checked === true)}
+                        />
+                        <div className="space-y-0.5">
+                          <Label htmlFor="auto_create_account" className="text-sm font-medium cursor-pointer">
+                            Criar conta de acesso
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Define login (matrícula) e senha para o colaborador acessar o sistema
+                          </p>
+                        </div>
                       </div>
+                      {autoCreateAccount && (
+                        <div className="space-y-2">
+                          <Label htmlFor="account_password" className="text-sm">Senha de acesso *</Label>
+                          <div className="flex gap-2">
+                            <Input
+                              id="account_password"
+                              type="text"
+                              value={accountPassword}
+                              onChange={(e) => setAccountPassword(e.target.value)}
+                              placeholder="Mínimo 8 caracteres"
+                              minLength={8}
+                              required
+                            />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              title="Gerar senha aleatória"
+                              onClick={() => setAccountPassword(generateSecurePassword())}
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Anote esta senha para repassar ao colaborador
+                          </p>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
