@@ -184,6 +184,7 @@ const ColaboradoresPage = () => {
       });
     } else {
       resetForm();
+      setAccountPassword(generateSecurePassword());
     }
     setIsDialogOpen(true);
   };
