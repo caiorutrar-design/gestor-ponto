@@ -198,17 +198,20 @@ const ColaboradoresPage = () => {
       const created = await createColaborador.mutateAsync(formData);
       // Auto-create auth account if checkbox is checked
       if (autoCreateAccount && created?.id) {
-        const pwd = generateSecurePassword();
+        if (accountPassword.length < 8) {
+          toast.error("A senha deve ter pelo menos 8 caracteres.");
+          return;
+        }
         try {
           const { data, error } = await supabase.functions.invoke("create-colaborador-account", {
-            body: { colaborador_id: created.id, password: pwd },
+            body: { colaborador_id: created.id, password: accountPassword },
           });
           if (!error && !data.error) {
             setIsDialogOpen(false);
             resetForm();
             setCredentialsColab(created as Colaborador);
-            setCredentialsPassword(pwd);
-            setCredentialsResult({ login: data.login, password: pwd });
+            setCredentialsPassword(accountPassword);
+            setCredentialsResult({ login: data.login, password: accountPassword });
             setCredentialsDialogOpen(true);
             return;
           }
