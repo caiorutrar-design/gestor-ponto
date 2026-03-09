@@ -120,6 +120,7 @@ const ColaboradoresPage = () => {
   const [credentialsResult, setCredentialsResult] = useState<{ login: string; password: string } | null>(null);
 
   const [autoCreateAccount, setAutoCreateAccount] = useState(true);
+  const [accountPassword, setAccountPassword] = useState(() => generateSecurePassword());
 
   const handleGenerateCredentials = (colaborador: Colaborador) => {
     setCredentialsColab(colaborador);
