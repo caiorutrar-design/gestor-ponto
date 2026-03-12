@@ -90,6 +90,7 @@ export type Database = {
           ativo: boolean
           cargo: string
           created_at: string
+          geolocation_obrigatoria: boolean
           id: string
           jornada_entrada_manha: string
           jornada_entrada_tarde: string
@@ -101,6 +102,7 @@ export type Database = {
           orgao_id: string
           senha_ponto: string | null
           senha_ponto_hash: string | null
+          unidade_trabalho_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -108,6 +110,7 @@ export type Database = {
           ativo?: boolean
           cargo: string
           created_at?: string
+          geolocation_obrigatoria?: boolean
           id?: string
           jornada_entrada_manha?: string
           jornada_entrada_tarde?: string
@@ -119,6 +122,7 @@ export type Database = {
           orgao_id: string
           senha_ponto?: string | null
           senha_ponto_hash?: string | null
+          unidade_trabalho_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -126,6 +130,7 @@ export type Database = {
           ativo?: boolean
           cargo?: string
           created_at?: string
+          geolocation_obrigatoria?: boolean
           id?: string
           jornada_entrada_manha?: string
           jornada_entrada_tarde?: string
@@ -137,6 +142,7 @@ export type Database = {
           orgao_id?: string
           senha_ponto?: string | null
           senha_ponto_hash?: string | null
+          unidade_trabalho_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -153,6 +159,13 @@ export type Database = {
             columns: ["orgao_id"]
             isOneToOne: false
             referencedRelation: "orgaos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "colaboradores_unidade_trabalho_id_fkey"
+            columns: ["unidade_trabalho_id"]
+            isOneToOne: false
+            referencedRelation: "unidades_trabalho"
             referencedColumns: ["id"]
           },
         ]
@@ -384,8 +397,11 @@ export type Database = {
           colaborador_id: string
           created_at: string
           data_registro: string
+          dentro_raio: boolean | null
           hora_registro: string
           id: string
+          latitude: number | null
+          longitude: number | null
           timestamp_registro: string
           tipo: string
         }
@@ -393,8 +409,11 @@ export type Database = {
           colaborador_id: string
           created_at?: string
           data_registro?: string
+          dentro_raio?: boolean | null
           hora_registro?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           timestamp_registro?: string
           tipo: string
         }
@@ -402,8 +421,11 @@ export type Database = {
           colaborador_id?: string
           created_at?: string
           data_registro?: string
+          dentro_raio?: boolean | null
           hora_registro?: string
           id?: string
+          latitude?: number | null
+          longitude?: number | null
           timestamp_registro?: string
           tipo?: string
         }
@@ -413,6 +435,50 @@ export type Database = {
             columns: ["colaborador_id"]
             isOneToOne: false
             referencedRelation: "colaboradores"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      unidades_trabalho: {
+        Row: {
+          ativo: boolean
+          created_at: string
+          id: string
+          latitude: number
+          longitude: number
+          nome: string
+          orgao_id: string
+          raio_metros: number
+          updated_at: string
+        }
+        Insert: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          latitude: number
+          longitude: number
+          nome: string
+          orgao_id: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Update: {
+          ativo?: boolean
+          created_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          nome?: string
+          orgao_id?: string
+          raio_metros?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "unidades_trabalho_orgao_id_fkey"
+            columns: ["orgao_id"]
+            isOneToOne: false
+            referencedRelation: "orgaos"
             referencedColumns: ["id"]
           },
         ]
