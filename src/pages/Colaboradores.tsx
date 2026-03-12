@@ -437,6 +437,41 @@ const ColaboradoresPage = () => {
                     <Label htmlFor="ativo">Colaborador Ativo</Label>
                   </div>
 
+                  {/* Geolocalização */}
+                  <div className="space-y-3 rounded-md border p-3 bg-muted/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium">Geolocalização</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Unidade de Trabalho</Label>
+                      <Select
+                        value={formData.unidade_trabalho_id || "none"}
+                        onValueChange={(v) => setFormData({ ...formData, unidade_trabalho_id: v === "none" ? null : v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhuma</SelectItem>
+                          {unidadesTrabalho.filter(u => u.ativo).map((u) => (
+                            <SelectItem key={u.id} value={u.id}>{u.nome} ({u.orgao?.sigla || ""})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="geo_obrigatoria"
+                        checked={formData.geolocation_obrigatoria || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, geolocation_obrigatoria: checked })}
+                        disabled={!formData.unidade_trabalho_id}
+                      />
+                      <div>
+                        <Label htmlFor="geo_obrigatoria" className="text-sm cursor-pointer">Exigir geolocalização</Label>
+                        <p className="text-xs text-muted-foreground">O ponto só será aceito dentro do raio da unidade</p>
+                      </div>
+                    </div>
+                  </div>
+
                   {!editingColaborador && (
                     <div className="space-y-3 rounded-md border p-3 bg-muted/50">
                       <div className="flex items-center space-x-2">
