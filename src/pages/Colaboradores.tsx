@@ -185,6 +185,8 @@ const ColaboradoresPage = () => {
         jornada_entrada_tarde: colaborador.jornada_entrada_tarde,
         jornada_saida_tarde: colaborador.jornada_saida_tarde,
         ativo: colaborador.ativo,
+        unidade_trabalho_id: (colaborador as any).unidade_trabalho_id || null,
+        geolocation_obrigatoria: (colaborador as any).geolocation_obrigatoria || false,
       });
     } else {
       resetForm();
