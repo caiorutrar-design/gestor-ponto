@@ -107,6 +107,7 @@ const ColaboradoresPage = () => {
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const { data: orgaos = [] } = useOrgaos();
   const { data: lotacoes = [] } = useLotacoes();
+  const { data: unidadesTrabalho = [] } = useUnidadesTrabalho();
   const createColaborador = useCreateColaborador();
   const updateColaborador = useUpdateColaborador();
   const deleteColaborador = useDeleteColaborador();
