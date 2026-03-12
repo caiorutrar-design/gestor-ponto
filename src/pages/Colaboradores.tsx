@@ -56,8 +56,9 @@ import {
 } from "@/hooks/useColaboradores";
 import { useOrgaos } from "@/hooks/useOrgaos";
 import { useLotacoes } from "@/hooks/useLotacoes";
+import { useUnidadesTrabalho } from "@/hooks/useUnidadesTrabalho";
 import { Colaborador, ColaboradorForm } from "@/types/database";
-import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy, RefreshCw, ShieldCheck, ShieldX } from "lucide-react";
+import { Plus, Pencil, Trash2, Users, Loader2, Eye, KeyRound, Copy, RefreshCw, ShieldCheck, ShieldX, MapPin } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useNavigate } from "react-router-dom";
 import { ColaboradoresFilters } from "@/components/colaboradores/ColaboradoresFilters";
@@ -97,6 +98,8 @@ const initialFormData: ColaboradorForm = {
   jornada_entrada_tarde: "14:00",
   jornada_saida_tarde: "18:00",
   ativo: true,
+  unidade_trabalho_id: null,
+  geolocation_obrigatoria: false,
 };
 
 const ColaboradoresPage = () => {
@@ -104,6 +107,7 @@ const ColaboradoresPage = () => {
   const { data: colaboradores = [], isLoading } = useColaboradores();
   const { data: orgaos = [] } = useOrgaos();
   const { data: lotacoes = [] } = useLotacoes();
+  const { data: unidadesTrabalho = [] } = useUnidadesTrabalho();
   const createColaborador = useCreateColaborador();
   const updateColaborador = useUpdateColaborador();
   const deleteColaborador = useDeleteColaborador();
@@ -181,6 +185,8 @@ const ColaboradoresPage = () => {
         jornada_entrada_tarde: colaborador.jornada_entrada_tarde,
         jornada_saida_tarde: colaborador.jornada_saida_tarde,
         ativo: colaborador.ativo,
+        unidade_trabalho_id: (colaborador as any).unidade_trabalho_id || null,
+        geolocation_obrigatoria: (colaborador as any).geolocation_obrigatoria || false,
       });
     } else {
       resetForm();
@@ -429,6 +435,41 @@ const ColaboradoresPage = () => {
                       }
                     />
                     <Label htmlFor="ativo">Colaborador Ativo</Label>
+                  </div>
+
+                  {/* Geolocalização */}
+                  <div className="space-y-3 rounded-md border p-3 bg-muted/50">
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin className="h-4 w-4 text-primary" />
+                      <Label className="text-sm font-medium">Geolocalização</Label>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground">Unidade de Trabalho</Label>
+                      <Select
+                        value={formData.unidade_trabalho_id || "none"}
+                        onValueChange={(v) => setFormData({ ...formData, unidade_trabalho_id: v === "none" ? null : v })}
+                      >
+                        <SelectTrigger><SelectValue placeholder="Nenhuma" /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="none">Nenhuma</SelectItem>
+                          {unidadesTrabalho.filter(u => u.ativo).map((u) => (
+                            <SelectItem key={u.id} value={u.id}>{u.nome} ({u.orgao?.sigla || ""})</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="geo_obrigatoria"
+                        checked={formData.geolocation_obrigatoria || false}
+                        onCheckedChange={(checked) => setFormData({ ...formData, geolocation_obrigatoria: checked })}
+                        disabled={!formData.unidade_trabalho_id}
+                      />
+                      <div>
+                        <Label htmlFor="geo_obrigatoria" className="text-sm cursor-pointer">Exigir geolocalização</Label>
+                        <p className="text-xs text-muted-foreground">O ponto só será aceito dentro do raio da unidade</p>
+                      </div>
+                    </div>
                   </div>
 
                   {!editingColaborador && (

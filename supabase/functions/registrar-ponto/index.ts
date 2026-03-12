@@ -2,12 +2,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 // In-memory rate limiting (per isolate instance)
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_WINDOW_MS = 60_000;
 const MAX_ATTEMPTS = 5;
 
 function isRateLimited(key: string): boolean {
@@ -21,6 +21,18 @@ function isRateLimited(key: string): boolean {
   return entry.count > MAX_ATTEMPTS;
 }
 
+// Haversine formula — returns distance in meters
+function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371000; // Earth radius in meters
+  const toRad = (deg: number) => (deg * Math.PI) / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -32,7 +44,7 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { matricula, senha_ponto } = await req.json();
+    const { matricula, senha_ponto, latitude, longitude } = await req.json();
 
     if (!matricula || !senha_ponto) {
       return new Response(
@@ -52,7 +64,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Validate credentials using pgcrypto crypt() comparison
+    // Validate credentials
     const { data: colaborador, error: colabError } = await supabaseAdmin
       .rpc("validate_senha_ponto", {
         _matricula: matricula,
@@ -60,7 +72,6 @@ Deno.serve(async (req) => {
       });
 
     if (colabError || !colaborador || colaborador.length === 0) {
-      // Log failed attempt
       await supabaseAdmin.from("audit_logs").insert({
         action_type: "login_failed",
         entity_type: "registro_ponto",
@@ -75,7 +86,70 @@ Deno.serve(async (req) => {
 
     const colab = colaborador[0];
 
-    // Check today's records count - flexible limit (safety net against abuse)
+    // Fetch full colaborador data for geolocation check
+    const { data: colabFull } = await supabaseAdmin
+      .from("colaboradores")
+      .select("geolocation_obrigatoria, unidade_trabalho_id")
+      .eq("id", colab.id)
+      .single();
+
+    let dentroRaio: boolean | null = null;
+
+    if (colabFull?.geolocation_obrigatoria && colabFull?.unidade_trabalho_id) {
+      // Must validate geolocation
+      if (latitude == null || longitude == null) {
+        return new Response(
+          JSON.stringify({ error: "Geolocalização obrigatória. Ative a localização no navegador e tente novamente." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const { data: unidade } = await supabaseAdmin
+        .from("unidades_trabalho")
+        .select("latitude, longitude, raio_metros, nome")
+        .eq("id", colabFull.unidade_trabalho_id)
+        .eq("ativo", true)
+        .single();
+
+      if (!unidade) {
+        return new Response(
+          JSON.stringify({ error: "Unidade de trabalho não encontrada ou inativa." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const distance = haversineDistance(latitude, longitude, unidade.latitude, unidade.longitude);
+      dentroRaio = distance <= unidade.raio_metros;
+
+      if (!dentroRaio) {
+        // Log the failed attempt with coordinates
+        await supabaseAdmin.from("audit_logs").insert({
+          action_type: "ponto_fora_raio",
+          entity_type: "registro_ponto",
+          details: {
+            matricula,
+            ip,
+            latitude,
+            longitude,
+            unidade_nome: unidade.nome,
+            distancia_metros: Math.round(distance),
+            raio_permitido: unidade.raio_metros,
+          },
+        });
+
+        return new Response(
+          JSON.stringify({
+            error: `Você está fora da área permitida (${Math.round(distance)}m da unidade "${unidade.nome}", limite: ${unidade.raio_metros}m). Aproxime-se do local de trabalho.`,
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } else if (latitude != null && longitude != null) {
+      // Geo not required but coordinates were sent — save for auditing
+      dentroRaio = null;
+    }
+
+    // Check today's records count
     const today = new Date().toISOString().split("T")[0];
     const { data: todayRecords, error: recordsError } = await supabaseAdmin
       .from("registros_ponto")
@@ -93,7 +167,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Determine type: alternate between entrada/saida
     const lastRecord = todayRecords && todayRecords.length > 0
       ? todayRecords[todayRecords.length - 1]
       : null;
@@ -101,7 +174,6 @@ Deno.serve(async (req) => {
 
     const now = new Date();
 
-    // Insert record
     const { data: registro, error: insertError } = await supabaseAdmin
       .from("registros_ponto")
       .insert({
@@ -110,6 +182,9 @@ Deno.serve(async (req) => {
         hora_registro: now.toTimeString().split(" ")[0],
         timestamp_registro: now.toISOString(),
         tipo,
+        latitude: latitude ?? null,
+        longitude: longitude ?? null,
+        dentro_raio: dentroRaio,
       })
       .select()
       .single();

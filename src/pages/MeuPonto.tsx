@@ -8,10 +8,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyColaborador, useMyRegistrosPonto, useMyRegistrosPontoPeriodo } from "@/hooks/useMyColaborador";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Clock, LogOut, LogIn, ArrowRightFromLine, Loader2, CalendarDays, ChevronLeft, ChevronRight,
+  Clock, LogOut, LogIn, ArrowRightFromLine, Loader2, CalendarDays, ChevronLeft, ChevronRight, MapPin, MapPinOff,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths, addMonths, parseISO, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -25,6 +26,7 @@ const MeuPontoPage = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const geo = useGeolocation();
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
@@ -52,6 +54,11 @@ const MeuPontoPage = () => {
     monthRecords.forEach((r) => days.add(r.data_registro));
     return days;
   }, [monthRecords]);
+
+  // Request geolocation on mount
+  useEffect(() => {
+    geo.requestPosition();
+  }, []);
 
   // Real-time clock
   useEffect(() => {
@@ -97,6 +104,9 @@ const MeuPontoPage = () => {
 
     setIsSubmitting(true);
     try {
+      // Get fresh coordinates
+      const position = await geo.requestPosition();
+
       const now = new Date();
       const { error } = await supabase.from("registros_ponto").insert({
         colaborador_id: colaborador.id,
@@ -104,6 +114,8 @@ const MeuPontoPage = () => {
         hora_registro: now.toTimeString().split(" ")[0],
         timestamp_registro: now.toISOString(),
         tipo: nextTipo,
+        latitude: position?.latitude ?? geo.latitude ?? null,
+        longitude: position?.longitude ?? geo.longitude ?? null,
       });
 
       if (error) throw error;
@@ -175,6 +187,17 @@ const MeuPontoPage = () => {
             </p>
           </CardContent>
         </Card>
+
+        {/* Geolocation Status */}
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${geo.latitude ? "bg-green-500/10 text-green-700" : geo.error ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+          {geo.loading ? (
+            <><Loader2 className="h-3 w-3 animate-spin" /><span>Obtendo localização...</span></>
+          ) : geo.latitude ? (
+            <><MapPin className="h-3 w-3" /><span>Localização ativa ({geo.accuracy ? `±${Math.round(geo.accuracy)}m` : ""})</span></>
+          ) : (
+            <><MapPinOff className="h-3 w-3" /><span>{geo.error || "Localização indisponível"}</span></>
+          )}
+        </div>
 
         {/* Main Action Button */}
         <Button

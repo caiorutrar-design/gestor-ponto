@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { Clock, CheckCircle2, AlertCircle, Loader2 } from "lucide-react";
+import { useGeolocation } from "@/hooks/useGeolocation";
+import { Clock, CheckCircle2, AlertCircle, Loader2, MapPin, MapPinOff } from "lucide-react";
 import { toast } from "sonner";
 
 const RegistroPontoPage = () => {
@@ -19,6 +20,13 @@ const RegistroPontoPage = () => {
     tipo?: string;
     colaborador_nome?: string;
   } | null>(null);
+
+  const geo = useGeolocation();
+
+  // Request geolocation on mount
+  useEffect(() => {
+    geo.requestPosition();
+  }, []);
 
   // Real-time clock
   useEffect(() => {
@@ -43,9 +51,17 @@ const RegistroPontoPage = () => {
     setIsSubmitting(true);
     setLastResult(null);
 
+    // Try to get fresh coordinates before submitting
+    const position = await geo.requestPosition();
+
     try {
       const { data, error } = await supabase.functions.invoke("registrar-ponto", {
-        body: { matricula: matricula.trim(), senha_ponto: senhaPonto.trim() },
+        body: {
+          matricula: matricula.trim(),
+          senha_ponto: senhaPonto.trim(),
+          latitude: position?.latitude ?? geo.latitude,
+          longitude: position?.longitude ?? geo.longitude,
+        },
       });
 
       if (error) throw error;
@@ -83,6 +99,31 @@ const RegistroPontoPage = () => {
               {formatTime(currentTime)}
             </p>
             <p className="text-lg text-muted-foreground mt-2">{formatDate(currentTime)}</p>
+          </CardContent>
+        </Card>
+
+        {/* Geolocation Status */}
+        <Card className={`border ${geo.latitude ? "border-green-500/30 bg-green-500/5" : geo.error ? "border-destructive/30 bg-destructive/5" : "border-muted"}`}>
+          <CardContent className="flex items-center gap-3 py-3">
+            {geo.loading ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Obtendo localização...</span>
+              </>
+            ) : geo.latitude ? (
+              <>
+                <MapPin className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-green-700">Localização obtida ({geo.accuracy ? `±${Math.round(geo.accuracy)}m` : ""})</span>
+              </>
+            ) : (
+              <>
+                <MapPinOff className="h-4 w-4 text-destructive" />
+                <div className="flex-1">
+                  <span className="text-sm text-destructive">{geo.error || "Localização indisponível"}</span>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => geo.requestPosition()}>Tentar novamente</Button>
+              </>
+            )}
           </CardContent>
         </Card>
 

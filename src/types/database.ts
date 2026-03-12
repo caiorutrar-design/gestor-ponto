@@ -45,6 +45,8 @@ export interface ColaboradorForm {
   jornada_entrada_tarde: string;
   jornada_saida_tarde: string;
   ativo: boolean;
+  unidade_trabalho_id?: string | null;
+  geolocation_obrigatoria?: boolean;
 }
 
 export interface OrgaoForm {

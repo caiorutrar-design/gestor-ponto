@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
 import Lotacoes from "./pages/Lotacoes";
+import UnidadesTrabalho from "./pages/UnidadesTrabalho";
 import RegistroPonto from "./pages/RegistroPonto";
 import GerenciarPontos from "./pages/GerenciarPontos";
 import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/colaboradores" element={<AdminOrSuperRoute><Colaboradores /></AdminOrSuperRoute>} />
             <Route path="/orgaos" element={<AdminOrSuperRoute><Orgaos /></AdminOrSuperRoute>} />
             <Route path="/lotacoes" element={<AdminOrSuperRoute><Lotacoes /></AdminOrSuperRoute>} />
+            <Route path="/unidades-trabalho" element={<AdminOrSuperRoute><UnidadesTrabalho /></AdminOrSuperRoute>} />
             <Route path="/gerenciar-pontos" element={<ProtectedRoute><GerenciarPontos /></ProtectedRoute>} />
             <Route path="/logs-auditoria" element={<AdminOrSuperRoute><LogsAuditoria /></AdminOrSuperRoute>} />
             <Route path="/gestao-rh" element={<ProtectedRoute><GestaoRH /></ProtectedRoute>} />
