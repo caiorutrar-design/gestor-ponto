@@ -26,6 +26,7 @@ const MeuPontoPage = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const geo = useGeolocation();
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
