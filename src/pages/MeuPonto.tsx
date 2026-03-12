@@ -104,6 +104,9 @@ const MeuPontoPage = () => {
 
     setIsSubmitting(true);
     try {
+      // Get fresh coordinates
+      const position = await geo.requestPosition();
+
       const now = new Date();
       const { error } = await supabase.from("registros_ponto").insert({
         colaborador_id: colaborador.id,
@@ -111,6 +114,8 @@ const MeuPontoPage = () => {
         hora_registro: now.toTimeString().split(" ")[0],
         timestamp_registro: now.toISOString(),
         tipo: nextTipo,
+        latitude: position?.latitude ?? geo.latitude ?? null,
+        longitude: position?.longitude ?? geo.longitude ?? null,
       });
 
       if (error) throw error;
