@@ -8,10 +8,11 @@ import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyColaborador, useMyRegistrosPonto, useMyRegistrosPontoPeriodo } from "@/hooks/useMyColaborador";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
-  Clock, LogOut, LogIn, ArrowRightFromLine, Loader2, CalendarDays, ChevronLeft, ChevronRight,
+  Clock, LogOut, LogIn, ArrowRightFromLine, Loader2, CalendarDays, ChevronLeft, ChevronRight, MapPin, MapPinOff,
 } from "lucide-react";
 import { format, startOfMonth, endOfMonth, subMonths, addMonths, parseISO, differenceInMinutes } from "date-fns";
 import { ptBR } from "date-fns/locale";
