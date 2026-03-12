@@ -23,6 +23,7 @@ const navigation: NavItem[] = [
   { name: "Colaboradores", href: "/colaboradores", icon: Users, requiredRole: "admin" },
   { name: "Órgãos", href: "/orgaos", icon: Building2, requiredRole: "admin" },
   { name: "Lotações", href: "/lotacoes", icon: MapPin, requiredRole: "admin" },
+  { name: "Unidades de Trabalho", href: "/unidades-trabalho", icon: Navigation, requiredRole: "admin" },
   { name: "Registros de Ponto", href: "/gerenciar-pontos", icon: Timer, requiredRole: "gestor" },
   { name: "Gestão de RH", href: "/gestao-rh", icon: Briefcase, requiredRole: "gestor" },
   { name: "Logs de Auditoria", href: "/logs-auditoria", icon: ClipboardList, requiredRole: "admin" },

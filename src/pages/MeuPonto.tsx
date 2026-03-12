@@ -188,6 +188,17 @@ const MeuPontoPage = () => {
           </CardContent>
         </Card>
 
+        {/* Geolocation Status */}
+        <div className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs ${geo.latitude ? "bg-green-500/10 text-green-700" : geo.error ? "bg-destructive/10 text-destructive" : "bg-muted text-muted-foreground"}`}>
+          {geo.loading ? (
+            <><Loader2 className="h-3 w-3 animate-spin" /><span>Obtendo localização...</span></>
+          ) : geo.latitude ? (
+            <><MapPin className="h-3 w-3" /><span>Localização ativa ({geo.accuracy ? `±${Math.round(geo.accuracy)}m` : ""})</span></>
+          ) : (
+            <><MapPinOff className="h-3 w-3" /><span>{geo.error || "Localização indisponível"}</span></>
+          )}
+        </div>
+
         {/* Main Action Button */}
         <Button
           size="lg"
