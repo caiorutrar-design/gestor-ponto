@@ -2,7 +2,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Users, Building2, MapPin, Menu, X, LogOut,
-  Shield, ShieldCheck, ClipboardList, UserCog, Clock, Timer, Briefcase, FolderOpen,
+  Shield, ShieldCheck, ClipboardList, UserCog, Clock, Timer, Briefcase, FolderOpen, MapPinCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
