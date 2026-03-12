@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Colaboradores from "./pages/Colaboradores";
 import Orgaos from "./pages/Orgaos";
 import Lotacoes from "./pages/Lotacoes";
+import UnidadesTrabalho from "./pages/UnidadesTrabalho";
 import RegistroPonto from "./pages/RegistroPonto";
 import GerenciarPontos from "./pages/GerenciarPontos";
 import GerenciamentoUsuarios from "./pages/GerenciamentoUsuarios";
