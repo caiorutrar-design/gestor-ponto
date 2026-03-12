@@ -55,6 +55,11 @@ const MeuPontoPage = () => {
     return days;
   }, [monthRecords]);
 
+  // Request geolocation on mount
+  useEffect(() => {
+    geo.requestPosition();
+  }, []);
+
   // Real-time clock
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
