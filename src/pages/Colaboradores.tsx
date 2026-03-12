@@ -98,6 +98,8 @@ const initialFormData: ColaboradorForm = {
   jornada_entrada_tarde: "14:00",
   jornada_saida_tarde: "18:00",
   ativo: true,
+  unidade_trabalho_id: null,
+  geolocation_obrigatoria: false,
 };
 
 const ColaboradoresPage = () => {
